@@ -1,0 +1,5 @@
+# ML
+numpy==1.20.3
+
+# DATA ANALYSIS
+matplotlib==3.4.2
