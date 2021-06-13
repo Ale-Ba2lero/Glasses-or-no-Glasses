@@ -11,8 +11,8 @@ from scratch.activations import ReLU, Softmax
 
 nnfs.init()
 
+# ------------------------------------ DATASET
 X, y = spiral_data(samples=4, classes=3)
-print(X)
 
 # ------------------------------------ NEW NET
 dense1 = Dense(2, 3, ReLU())
@@ -26,5 +26,9 @@ loss = loss_function.calculate(dense2.output, y)
 
 print("Loss: ", loss)
 
-plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.Spectral)
-plt.show()
+# 1) compute the gradient on scores
+
+# 2) backpropate the gradient to the parameters for each layer and activation function
+
+#plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.Spectral)
+#plt.show()
