@@ -1,20 +1,23 @@
 
 import numpy as np
-from numpy.lib.function_base import select
 
 class Activation:
     def compute(self, inputs):
         self.forward(inputs)
         return self.output
 
+    def backpropagation(self, dscore, layer):
+        self.backward(dscore, layer)
+        return self.dlayer
+
 class ReLU(Activation):
     def forward(self, inputs):
         self.inputs = inputs
         self.output = np.maximum(0, inputs)
 
-    def backward(self, dlayer):
-        self.doutput = dlayer
-        self.doutput[self.inputs <= 0] = 0
+    def backward(self, dscore, layer):
+        self.dlayer = np.dot(dscore, layer.T)
+        self.dlayer[self.output <= 0] = 0
 
 class Softmax(Activation):
     def forward(self, inputs):
@@ -25,7 +28,6 @@ class Softmax(Activation):
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
         self.output = probabilities 
 
-    def backward(self, y):
-        self.doutput = self.output
-        self.doutput[range(self.num_examples), y] -= 1
-        self.doutput /= self.num_examples
+    def backward(self):
+        # TODO mettere qui calcolo derivata loss
+        pass

@@ -4,6 +4,7 @@ import numpy as np
 class Loss:
     def calculate(self, output, y):
         sample_losses = self.forward(output, y)
+        self.backward(output, y)
         data_loss = np.mean(sample_losses)
         return data_loss
     
@@ -20,3 +21,9 @@ class CategoricalCrossentropy(Loss):
 
         negative_log_likelihood = -np.log(correct_confidences)
         return negative_log_likelihood
+
+    def backward(self, y_pred, y_true):
+        num_examples = len(y_pred)
+        self.doutput = y_pred
+        self.doutput[range(num_examples), y_true] -= 1
+        self.doutput /= num_examples

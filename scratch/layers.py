@@ -3,23 +3,18 @@
 import numpy as np
 
 class Dense:
-    def __init__(self, inputs, neurons, activation=False):
-        self.weights = 0.10 * np.random.randn(inputs, neurons)
-        self.biases = np.zeros((1, neurons))
-        if activation is not False:
-            self.activation = activation
+    def __init__(self, inputs, neurons):
+        self.W = 0.10 * np.random.randn(inputs, neurons)
+        self.b = np.zeros((1, neurons))
 
     def forward(self, inputs):
-        self.output = np.dot(inputs, self.weights) + self.biases
-        if hasattr (self, "activation"):
-            self.output = self.activation.compute(self.output)
+        self.inputs = inputs
+        self.output = np.dot(inputs, self.W) + self.b
 
     def backward(self, dscore):
-        self.dweights = np.dot(self.weights.T, dscore)
-        self.dbiases = np.sum(dscore, axis=0, keepdims=True)
-
-        # TODO propagate also through the activation function
+        self.dW = np.dot(self.inputs.T, dscore)
+        self.db = np.sum(dscore, axis=0, keepdims=True)
 
     def update(self, step_size):
-        self.weights += -step_size * self.dweights
-        self.biases += -step_size * self.dbiases
+        self.W += -step_size * self.dW
+        self.b += -step_size * self.db
