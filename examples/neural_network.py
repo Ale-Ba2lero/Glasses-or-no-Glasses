@@ -1,8 +1,6 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from numpy.core.fromnumeric import shape
-
 
 N = 100 # number of points per class
 D = 2 # dimensionality
@@ -49,7 +47,7 @@ for i in range(10000):
   correct_logprobs = -np.log(probs[range(num_examples),y])
   data_loss = np.sum(correct_logprobs)/num_examples
   reg_loss = 0.5*reg*np.sum(W*W) + 0.5*reg*np.sum(W2*W2)
-  loss = data_loss + reg_loss
+  loss = data_loss #+ reg_loss
   if i % 1000 == 0:
     print (f"iteration {i}: loss {loss}")
 
