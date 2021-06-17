@@ -3,24 +3,21 @@ import numpy as np
 
 class Loss:
     def calculate(self, output, y):
-        sample_losses = self.forward(output, y)
-        self.backward(output, y)
+        sample_losses, acc = self.forward(output, y)
         data_loss = np.mean(sample_losses)
-        return data_loss
+        self.backward(output, y)
+        return data_loss, acc
     
 class CategoricalCrossentropy(Loss):
     def forward(self, y_pred, y_true):
         samples = len(y_pred)
         # clip the values to avoid dividing by zero
         y_pred_clipped = np.clip(y_pred, 1e-7, 1-1e-7)
-
-        if len(y_true.shape) == 1: 
-            correct_confidences = y_pred_clipped[range(samples), y_true]
-        elif len(y_true.shape) == 2: # if the y is batched
-            correct_confidences = np.sum(y_pred_clipped*y_true, axis=1)
-
+        correct_confidences = y_pred_clipped[range(samples), y_true]
         negative_log_likelihood = -np.log(correct_confidences)
-        return negative_log_likelihood
+        acc = sum([1 for i in range(samples) if np.argmax(y_pred[i]) == y_true[i]])/samples
+
+        return negative_log_likelihood, acc
 
     def backward(self, y_pred, y_true):
         num_examples = len(y_pred)
