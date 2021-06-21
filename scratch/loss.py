@@ -5,8 +5,8 @@ class Loss:
     def calculate(self, output, y):
         sample_losses, acc = self.forward(output, y)
         data_loss = np.mean(sample_losses)
-        self.backward(output, y)
-        return data_loss, acc
+        dscore = self.backward(output, y)
+        return data_loss, acc, dscore
     
 class CategoricalCrossentropy(Loss):
     def forward(self, y_pred, y_true):
@@ -21,6 +21,8 @@ class CategoricalCrossentropy(Loss):
 
     def backward(self, y_pred, y_true):
         num_examples = len(y_pred)
-        self.doutput = y_pred
-        self.doutput[range(num_examples), y_true] -= 1
-        self.doutput /= num_examples
+        dscore = y_pred
+        dscore[range(num_examples), y_true] -= 1
+        dscore /= num_examples
+
+        return dscore

@@ -35,7 +35,7 @@ X_train, X_test, y_train, y_test = train_test_split(X,
 
 # ------------------------------------ HYPER PARAMETERS
 STEP_SIZE = 1e-0
-N_EPOCHS = 10000
+N_EPOCHS = 4000
 BATCH_SIZE = len(X_train)//1
 
 # ------------------------------------ BUILD THE MODEL
@@ -46,7 +46,7 @@ nn = Model([
 ], CategoricalCrossentropy())
 
 # ------------------------------------ FIT THE MODEL
-nn.fit(X=X_train, 
+nn.train(X=X_train, 
         y=y_train, 
         epochs=N_EPOCHS, 
         batch_size=BATCH_SIZE, 
