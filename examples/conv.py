@@ -39,22 +39,22 @@ class Conv3x3:
 
         return output
 
-    def backprop(self, d_L_d_out, learn_rate):
+    def backprop(self, dL_dout, learn_rate):
         '''
         Performs a backward pass of the conv layer.
-        - d_L_d_out is the loss gradient for this layer's outputs.
+        - dL_dout is the loss gradient for this layer's outputs.
         - learn_rate is a float.
         '''
-        d_L_d_filters = np.zeros(self.filters.shape)
+        dL_dfilters = np.zeros(self.filters.shape)
 
         for img_region, i, j in self.iterate_regions(self.last_input):
             for f in range(self.n_filters):
-                d_L_d_filters[f] += d_L_d_out[i, j, f] * img_region
+                dL_dfilters[f] += dL_dout[i, j, f] * img_region
 
         # Update filters
-        self.filters -= learn_rate * d_L_d_filters
+        self.filters -= learn_rate * dL_dfilters
 
-        #return self.d_L_d_input
+        #return self.dL_dinput
         return None
 
 
@@ -92,13 +92,13 @@ class MaxPool2:
         
         return output
 
-    def backprop(self, d_L_d_out):
+    def backprop(self, dL_dout):
         '''
         Performs a backward pass of the maxpool layer.
         Returns the loss gradient for this layer's inputs.
-        - d_L_d_out is the loss gradient for this layer's outputs.
+        - dL_dout is the loss gradient for this layer's outputs.
         '''
-        d_L_d_input = np.zeros(self.last_input.shape)
+        dL_dinput = np.zeros(self.last_input.shape)
 
         for img_region, i, j in self.iterate_regions(self.last_input):
             h, w, f = img_region.shape
@@ -109,9 +109,9 @@ class MaxPool2:
                     for f2 in range(f):
                         # If the pixel was the max value, copy the gradient to it.
                         if img_region[i2, j2, f2] == amax[f2]:
-                            d_L_d_input[i * 2 + i2, j * 2 + j2, f2] = d_L_d_out[i, j, f2]
+                            dL_dinput[i * 2 + i2, j * 2 + j2, f2] = dL_dout[i, j, f2]
 
-        return d_L_d_input
+        return dL_dinput
 
 class Softmax:
     # A standard fully-connected layer with softmax activation.

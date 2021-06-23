@@ -21,3 +21,8 @@ class Softmax():
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
 
         return probabilities
+
+    def backpropagation(self):
+        # the CategoricalCrossentropy Loss function already takes into account
+        # the softmax backpropagation
+        pass

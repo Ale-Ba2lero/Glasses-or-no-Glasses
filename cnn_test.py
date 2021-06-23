@@ -67,7 +67,7 @@ def train(img, label, lr=.005):
 print('MNIST CNN initialized!')
 
 # Train the CNN for 3 epochs
-for epoch in range(3):
+for epoch in range(1):
   print('--- Epoch %d ---' % (epoch + 1))
 
   # Shuffle the training data

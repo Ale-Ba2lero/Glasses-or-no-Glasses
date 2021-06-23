@@ -43,3 +43,32 @@ class Dense:
         #    print (f'perform b{self.id} update:\n{self.b} + {-step_size} X {self.db}')
         self.b += -step_size * self.db
             
+class Conv:
+
+    def __init__(self, num_filters, kernel_size=(3, 3), padding=0, stride=(1,1), activation=ReLU()):
+        self.num_filters = num_filters
+        self.kernel_size = kernel_size
+        self.padding = padding
+        self.stride = stride
+        self.activation = activation
+        
+        # We divide by 9 to reduce the variance of our initial values
+        self.filters = np.random.random_sample((self.num_filters,) + self.kernel_size + (3,)) / 9
+
+    def iterate_regions(self, image):
+        '''
+        Generates all possible  image regions using valid padding.
+        - image is a 3d numpy array
+        '''
+
+        h, w, _ = image.shape
+
+        for i in range(h - 2):
+            for j in range(w - 2):
+                img_region = image[i:(i + 3), j:(j + 3), :]
+                yield img_region, i, j
+
+
+        
+
+
