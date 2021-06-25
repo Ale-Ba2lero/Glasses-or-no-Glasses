@@ -53,28 +53,28 @@ class Conv:
         self.stride = stride
         self.activation = activation
 
-        # We divide by 9 to reduce the variance of our initial values
-        self.filters = np.random.random_sample((self.num_filters,) + self.kernel_size + (3,)) / 9
+        # We multiply by 0.1 to reduce the variance of our initial values
+        self.filters = np.random.random_sample((self.num_filters,) + self.kernel_size + (3,)) * 0.1
 
-    def convolution_compatibility(self, image):
-        h, w, _ = image.shape
+    def convolution_compatibility(self, input_image):
+        h, w, _ = input_image.shape
         f_h, f_w = self.kernel_size
         s = self.stride
         p = self.padding
 
         output_layer_h = (h - f_h + 2 * p) / s + 1
-        output_layer_w = (h - f_w + 2 * p) / s + 1
+        output_layer_w = (w - f_w + 2 * p) / s + 1
 
         if output_layer_h % 1 != 0 or output_layer_w % 1 != 0:
             print('Error!: hyperparameters setting is invalid!')
             return None
 
-        return output_layer_h, output_layer_w
+        return int(output_layer_h), int(output_layer_w)
 
     def zero_padding(self, image, padding=1):
         h, w, d = image.shape
-        canvas = np.zeros((h + padding*2, w + padding*2, d))
-        canvas[padding:h+padding, padding:w+padding] = image
+        canvas = np.zeros((h + padding * 2, w + padding * 2, d))
+        canvas[padding:h + padding, padding:w + padding] = image
         return canvas
 
     def iterate_regions(self, image):
@@ -82,8 +82,7 @@ class Conv:
         Generates all possible  image regions using valid padding.
         - image is a 3d numpy array
         """
-        output_size = self.convolution_compatibility(image=image)
-        print (f"output_size: {output_size}")
+        output_size = self.convolution_compatibility(input_image=image)
 
         if output_size is not None:
             if self.padding > 0:
@@ -101,16 +100,71 @@ class Conv:
     def forward(self, input):
         """
         Performs a forward pass of the conv layer using the given input.
-        Returns a 3d numpy array with dimensions (h, w, num_filters).
-        - input is a 2d numpy array
+        Returns a 3d numpy array with dimensions (h, w, 3, num_filters).
+        - input is a 3d numpy array
         """
         self.last_input = input
 
-        h, w = input.shape
-        output = np.zeros((h - 2, w - 2, 3, self.num_filters))
+        o_h, o_w = self.convolution_compatibility(input)
+        output = []
+        for f in self.filters:
+            for img_region, i, j in self.iterate_regions(input):
+                output.append(np.sum(img_region * f))
 
-        k = 0
-        for img_region, i, j in self.iterate_regions(input):
-            output[i, j, :] = np.sum(img_region * self.filters, axis=(1, 2))
+        output = np.array(output)
+        output = output.reshape((self.num_filters, o_h, o_w))
+        return output
+
+
+class MaxPool:
+    def iterate_regions(self, images):
+        """
+        Generates non-overlapping 2x2 image regions to pool over.
+        - image is a 2d numpy array
+        """
+        n, h, w = images.shape
+        new_h = h // 2
+        new_w = w // 2
+
+        for m in range(n):
+            for i in range(new_h):
+                for j in range(new_w):
+                    img_region = images[m, (i * 2):(i * 2 + 2), (j * 2):(j * 2 + 2)]
+                    yield img_region, i, j
+
+    def forward(self, input):
+        """
+        Performs a forward pass of the maxpool layer using the given input.
+        Returns a 3d numpy array with dimensions (h / 2, w / 2, 3, num_filters).
+        - input is a 3d numpy array with dimensions (h, w, 3, num_filters)
+        """
+        self.last_input = input
+
+        n, h, w = input.shape
+        output = np.zeros((n, h // 2, w // 2))
+        for m in range(n):
+            for img_region, i, j in self.iterate_regions(input):
+                output[m, i, j] = np.amax(img_region)
 
         return output
+
+    def backprop(self, dL_dout):
+        """
+        Performs a backward pass of the maxpool layer.
+        Returns the loss gradient for this layer's inputs.
+        - dL_dout is the loss gradient for this layer's outputs.
+        """
+        dL_dinput = np.zeros(self.last_input.shape)
+
+        for img_region, i, j in self.iterate_regions(self.last_input):
+            h, w, f = img_region.shape
+            amax = np.amax(img_region, axis=(0, 1))
+
+            for i2 in range(h):
+                for j2 in range(w):
+                    for f2 in range(f):
+                        # If the pixel was the max value, copy the gradient to it.
+                        if img_region[i2, j2, f2] == amax[f2]:
+                            dL_dinput[i * 2 + i2, j * 2 + j2, f2] = dL_dout[i, j, f2]
+
+        return dL_dinput
