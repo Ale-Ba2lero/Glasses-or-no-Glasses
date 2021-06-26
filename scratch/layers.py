@@ -46,18 +46,26 @@ class Dense:
 
 class Conv:
 
-    def __init__(self, num_filters, kernel_size=(3, 3), padding=0, stride=1, activation=ReLU()):
+    def __init__(self, num_filters, kernel_size=(3, 3), padding=0, stride=1, activation=ReLU(), log=False):
         self.num_filters = num_filters
         self.kernel_size = kernel_size
         self.padding = padding
         self.stride = stride
         self.activation = activation
+        self.log = log
+        # TODO add bias?
 
-        # We multiply by 0.1 to reduce the variance of our initial values
-        self.filters = np.random.random_sample((self.num_filters,) + self.kernel_size + (3,)) * 0.1
+    def setup(self, input_size, next_layer=None, id=None):
+        self.input_size = input_size
+        self.output_size = self.convolution_compatibility(input_size)
+        # We divide by 9 to reduce the variance of our initial values
+        self.filters = np.random.random_sample(
+            (self.kernel_size[0], self.kernel_size[1], input_size[3], self.num_filters)) / 9
 
-    def convolution_compatibility(self, input_image):
-        h, w, _ = input_image.shape
+        print(f"input size: {self.input_size}\nfilter size: {self.filters.shape}\noutput size: {self.output_size}")
+
+    def convolution_compatibility(self, input_size):
+        batch, h, w, _ = input_size
         f_h, f_w = self.kernel_size
         s = self.stride
         p = self.padding
@@ -69,68 +77,63 @@ class Conv:
             print('Error!: hyperparameters setting is invalid!')
             return None
 
-        return int(output_layer_h), int(output_layer_w)
+        return batch, int(output_layer_h), int(output_layer_w), self.num_filters
 
-    def zero_padding(self, image, padding=1):
-        h, w, d = image.shape
-        canvas = np.zeros((h + padding * 2, w + padding * 2, d))
-        canvas[padding:h + padding, padding:w + padding] = image
+    def zero_padding(self, input, padding=1):
+        batch, h, w, chan = input.shape
+        canvas = np.zeros((batch, h + padding * 2, w + padding * 2, chan))
+        canvas[:, padding:h + padding, padding:w + padding] = input
         return canvas
 
-    def iterate_regions(self, image):
+    def iterate_regions(self, input):
         """
         Generates all possible  image regions using valid padding.
         - image is a 3d numpy array
         """
-        output_size = self.convolution_compatibility(input_image=image)
 
-        if output_size is not None:
-            if self.padding > 0:
-                image = self.zero_padding(image, self.padding)
+        _, h, w, _ = input.shape
+        h_limit = h - self.kernel_size[0] + 1
+        w_limit = w - self.kernel_size[1] + 1
 
-            h, w, _ = image.shape
-            h_limit = h - self.kernel_size[0] + 1
-            w_limit = w - self.kernel_size[1] + 1
-
-            for i in range(0, h_limit, self.stride):
-                for j in range(0, w_limit, self.stride):
-                    img_region = image[i:(i + self.kernel_size[0]), j:(j + self.kernel_size[1]), :]
-                    yield img_region, i, j
+        for i in range(0, h_limit, self.stride):
+            for j in range(0, w_limit, self.stride):
+                img_region = input[:, i:(i + self.kernel_size[0]), j:(j + self.kernel_size[1]), :]
+                yield img_region, i, j
 
     def forward(self, input):
-        """
-        Performs a forward pass of the conv layer using the given input.
-        Returns a 3d numpy array with dimensions (h, w, 3, num_filters).
-        - input is a 3d numpy array
-        """
         self.last_input = input
 
-        o_h, o_w = self.convolution_compatibility(input)
-        output = []
-        for f in self.filters:
-            for img_region, i, j in self.iterate_regions(input):
-                output.append(np.sum(img_region * f))
+        if self.padding > 0:
+            input = self.zero_padding(input, self.padding)
 
-        output = np.array(output)
-        output = output.reshape((self.num_filters, o_h, o_w))
+        output = np.zeros(self.output_size)
+        for b in range(self.output_size[0]):
+            for f in range(self.filters.shape[3]):
+                for img_region, i, j in self.iterate_regions(input):
+                    output[b, i, j, f] = np.sum(img_region[b] * self.filters[:, :, :, f], keepdims=True)
+
         return output
 
-
 class MaxPool:
+    def setup(self, input_size):
+        self.input_size = input_size
+        h, w, n = input_size
+        self.output_size = (h // 2, w // 2, n)
+
     def iterate_regions(self, images):
         """
         Generates non-overlapping 2x2 image regions to pool over.
         - image is a 2d numpy array
         """
-        n, h, w = images.shape
+
+        h, w, n = images.shape
         new_h = h // 2
         new_w = w // 2
 
-        for m in range(n):
-            for i in range(new_h):
-                for j in range(new_w):
-                    img_region = images[m, (i * 2):(i * 2 + 2), (j * 2):(j * 2 + 2)]
-                    yield img_region, i, j
+        for i in range(new_h):
+            for j in range(new_w):
+                img_region = images[(i * 2):(i * 2 + 2), (j * 2):(j * 2 + 2), :]
+                yield img_region, i, j
 
     def forward(self, input):
         """
@@ -140,11 +143,11 @@ class MaxPool:
         """
         self.last_input = input
 
-        n, h, w = input.shape
-        output = np.zeros((n, h // 2, w // 2))
-        for m in range(n):
-            for img_region, i, j in self.iterate_regions(input):
-                output[m, i, j] = np.amax(img_region)
+        h, w, n = input.shape
+        output = np.zeros((h // 2, w // 2, n))
+
+        for img_region, i, j in self.iterate_regions(input):
+            output[i, j, :] = np.amax(img_region)
 
         return output
 

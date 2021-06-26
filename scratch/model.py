@@ -1,13 +1,13 @@
-
 from scratch.loss import CategoricalCrossentropy
 import numpy as np
+
 
 class Model():
     def __init__(self, layers=[], loss_function=CategoricalCrossentropy()) -> None:
         self.layers = layers
         self.loss_function = loss_function
 
-    def train (self, X=None, y=None, epochs=1, batch_size=None, step_size=1e-0, log=False):
+    def train(self, X=None, y=None, epochs=1, batch_size=None, step_size=1e-0, log=False):
         self.X = X
         self.y = y
         self.EPOCHS = epochs
@@ -18,27 +18,27 @@ class Model():
         extra_batch = int(len(X) % self.BATCH_SIZE > 0)
 
         if log >= 1:
-            print (f'training set size: {len(X)}')
-            print (f'epochs: {self.EPOCHS}')
-            print (f'batch size: {self.BATCH_SIZE}')
-            print (f'batches: {n_batches}\nextra batch: {extra_batch}\n')
+            print(f'training set size: {len(X)}')
+            print(f'epochs: {self.EPOCHS}')
+            print(f'batch size: {self.BATCH_SIZE}')
+            print(f'batches: {n_batches}\nextra batch: {extra_batch}\n')
 
         for l in range(len(self.layers)):
             if l == 0:
-                self.layers[l].setup(input_size=X.shape[1], next_layer=self.layers[l+1], id=l+1)
+                self.layers[l].setup(input_size=X.shape[1], next_layer=self.layers[l + 1], id=l + 1)
             elif l == len(self.layers) - 1:
-                self.layers[l].setup(input_size=self.layers[l-1].num_neurons, id=l+1)
+                self.layers[l].setup(input_size=self.layers[l - 1].num_neurons, id=l + 1)
             else:
-                self.layers[l].setup(input_size=self.layers[l-1].num_neurons, next_layer=self.layers[l+1], id=l+1)
+                self.layers[l].setup(input_size=self.layers[l - 1].num_neurons, next_layer=self.layers[l + 1], id=l + 1)
 
-        #print('\n')
-                
+        # print('\n')
+
         for i in range(self.EPOCHS):
-            for j in range (n_batches + extra_batch):
-                X_batch = X[j*self.BATCH_SIZE:(j+1)*self.BATCH_SIZE]
-                y_batch = y[j*self.BATCH_SIZE:(j+1)*self.BATCH_SIZE]
-                
-                #print("---------------------- FORWARD\n")
+            for j in range(n_batches + extra_batch):
+                X_batch = X[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
+                y_batch = y[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
+
+                # print("---------------------- FORWARD\n")
 
                 # forward step
                 input_layer = X_batch
@@ -53,9 +53,9 @@ class Model():
                 if i % 1000 == 0 and j == 0 and log == True:
                     print_loss = "{:.2}".format(loss)
                     print_acc = "{:.2%}".format(acc)
-                    print (f"iteration {i}: loss {print_loss} ---- acc {print_acc}")
+                    print(f"iteration {i}: loss {print_loss} ---- acc {print_acc}")
 
-                #print("\n---------------------- BACKWARD\n")
+                # print("\n---------------------- BACKWARD\n")
 
                 # backward step
                 for layer in reversed(self.layers):
@@ -64,10 +64,9 @@ class Model():
                 # parameters update
                 for layer in self.layers:
                     layer.update(self.STEP_SIZE)
-                    
 
     def summary(self):
-        #TODO
+        # TODO
         pass
 
     def evaluate(self, X_test, y_test):
@@ -79,5 +78,5 @@ class Model():
         output = input_layer
 
         predicted_class = np.argmax(output, axis=1)
-        acc = "{:.2%}".format(np.mean(predicted_class == y_test)) 
-        print (f'Test accuracy: {acc}')
+        acc = "{:.2%}".format(np.mean(predicted_class == y_test))
+        print(f'Test accuracy: {acc}')
