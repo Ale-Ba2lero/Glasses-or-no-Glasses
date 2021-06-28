@@ -2,10 +2,10 @@ import idx2numpy
 import numpy as np
 from examples.conv import Conv3x3, MaxPool2, Softmax
 
-train_images_file = 'data/train-images.idx3-ubyte'
-train_labels_file = 'data/train-labels.idx1-ubyte'
-test_images_file = 'data/t10k-images.idx3-ubyte'
-test_labels_file = 'data/t10k-labels.idx1-ubyte'
+train_images_file = 'dataset/train-images.idx3-ubyte'
+train_labels_file = 'dataset/train-labels.idx1-ubyte'
+test_images_file = 'dataset/t10k-images.idx3-ubyte'
+test_labels_file = 'dataset/t10k-labels.idx1-ubyte'
 
 train_images = idx2numpy.convert_from_file(train_images_file)
 train_labels = idx2numpy.convert_from_file(train_labels_file)

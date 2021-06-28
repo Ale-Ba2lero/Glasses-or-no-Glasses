@@ -55,7 +55,6 @@ class Conv3x3:
         self.filters -= learn_rate * dL_dfilters
 
         # return self.dL_dinput
-        return None
 
 
 class MaxPool2:

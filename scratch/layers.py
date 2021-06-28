@@ -8,6 +8,9 @@ class Dense:
         self.activation = activation
 
     def setup(self, input_size, next_layer=None, id=None):
+        if type(input_size) == tuple:
+            input_size = input_size[1]
+
         self.id = id
 
         # multiply by 0.1 to reduce the variance of our initial values
@@ -18,6 +21,9 @@ class Dense:
 
         #    print (f'b{self.id}: {self.b.shape}\n{self.b}\n')
         self.next_layer = next_layer
+
+        print(
+            f"Dense layer\ninput size: {input_size}\nOutput size: {self.W.shape}\n")
 
     def forward(self, input_layer):
         self.input_layer = input_layer
@@ -64,7 +70,7 @@ class Conv:
             (self.kernel_size[0], self.kernel_size[1], input_size[3], self.num_filters)) * 0.1
 
         print(
-            f"Conv layer\ninput size: {self.input_size}\nfilter size: {self.filters.shape}\noutput size: {self.output_size}")
+            f"Conv layer\ninput size: {self.input_size}\nfilter size: {self.filters.shape}\noutput size: {self.output_size}\n")
 
     def convolution_compatibility(self, input_size):
         batch, h, w, _ = input_size
@@ -117,13 +123,30 @@ class Conv:
 
         return output
 
+    def backprop(self, dL_dout, learn_rate):
+        """
+        Performs a backward pass of the conv layer.
+        - dL_dout is the loss gradient for this layer's outputs.
+        - learn_rate is a float.
+        """
+        dL_dfilters = np.zeros(self.filters.shape)
+
+        for img_region, i, j in self.iterate_regions(self.last_input):
+            for f in range(self.num_filters):
+                dL_dfilters[f] += dL_dout[i, j, f] * img_region
+
+        # Update filters
+        self.filters -= learn_rate * dL_dfilters
+
+        # return self.dL_dinput
+
 
 class MaxPool:
     def setup(self, input_size):
         self.input_size = input_size
         batch, h, w, d = input_size
         self.output_size = (batch, h // 2, w // 2, d)
-        print(f"Pool layer\ninput size: {self.input_size}\noutput size: {self.output_size}")
+        print(f"Pool layer\ninput size: {self.input_size}\noutput size: {self.output_size}\n")
 
     def iterate_regions(self, inputs):
         """
@@ -171,3 +194,22 @@ class MaxPool:
                             dL_dinput[i * 2 + i2, j * 2 + j2, f2] = dL_dout[i, j, f2]
 
         return dL_dinput
+
+
+class Flatten:
+
+    def setup(self, input_size):
+        self.input_size = input_size
+        batch, h, w, d = input_size
+        self.output_size = (batch, h * w * d)
+        print(f"Flatten layer\ninput size: {self.input_size}\noutput size: {self.output_size}\n")
+
+    def forward(self, inputs):
+        self.last_inputs = inputs
+
+        # Hope reshape works as I expect
+        output = np.reshape(inputs, self.output_size)
+        return output
+
+    #def backward(self, dscore):
+
