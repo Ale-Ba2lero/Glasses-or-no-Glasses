@@ -58,11 +58,13 @@ class Conv:
     def setup(self, input_size, next_layer=None, id=None):
         self.input_size = input_size
         self.output_size = self.convolution_compatibility(input_size)
-        # We divide by 9 to reduce the variance of our initial values
-        self.filters = np.random.random_sample(
-            (self.kernel_size[0], self.kernel_size[1], input_size[3], self.num_filters)) / 9
 
-        print(f"input size: {self.input_size}\nfilter size: {self.filters.shape}\noutput size: {self.output_size}")
+        # We divide by 10 to reduce the variance of our initial values
+        self.filters = np.random.random_sample(
+            (self.kernel_size[0], self.kernel_size[1], input_size[3], self.num_filters)) * 0.1
+
+        print(
+            f"Conv layer\ninput size: {self.input_size}\nfilter size: {self.filters.shape}\noutput size: {self.output_size}")
 
     def convolution_compatibility(self, input_size):
         batch, h, w, _ = input_size
@@ -79,75 +81,73 @@ class Conv:
 
         return batch, int(output_layer_h), int(output_layer_w), self.num_filters
 
-    def zero_padding(self, input, padding=1):
-        batch, h, w, chan = input.shape
-        canvas = np.zeros((batch, h + padding * 2, w + padding * 2, chan))
-        canvas[:, padding:h + padding, padding:w + padding] = input
+    def zero_padding(self, inputs, padding=1):
+        batch, h, w, d = inputs.shape
+        canvas = np.zeros((batch, h + padding * 2, w + padding * 2, d))
+        canvas[:, padding:h + padding, padding:w + padding] = inputs
         return canvas
 
-    def iterate_regions(self, input):
+    def iterate_regions(self, inputs):
         """
         Generates all possible  image regions using valid padding.
         - image is a 3d numpy array
         """
-
-        _, h, w, _ = input.shape
+        _, h, w, _ = inputs.shape
         h_limit = h - self.kernel_size[0] + 1
         w_limit = w - self.kernel_size[1] + 1
 
         for i in range(0, h_limit, self.stride):
             for j in range(0, w_limit, self.stride):
-                img_region = input[:, i:(i + self.kernel_size[0]), j:(j + self.kernel_size[1]), :]
+                img_region = inputs[:, i:(i + self.kernel_size[0]), j:(j + self.kernel_size[1]), :]
                 yield img_region, i, j
 
-    def forward(self, input):
-        self.last_input = input
+    def forward(self, inputs):
+        self.last_input = inputs
 
         if self.padding > 0:
-            input = self.zero_padding(input, self.padding)
+            inputs = self.zero_padding(inputs, self.padding)
 
         output = np.zeros(self.output_size)
-        for b in range(self.output_size[0]):
-            for f in range(self.filters.shape[3]):
-                for img_region, i, j in self.iterate_regions(input):
-                    output[b, i, j, f] = np.sum(img_region[b] * self.filters[:, :, :, f], keepdims=True)
+        batch, _, _, d = output.shape
+
+        for b in range(batch):
+            for f in range(d):
+                for img_region, i, j in self.iterate_regions(inputs):
+                    output[b, i, j, f] = np.sum(img_region[b] * self.filters[:, :, :, f])
 
         return output
+
 
 class MaxPool:
     def setup(self, input_size):
         self.input_size = input_size
-        h, w, n = input_size
-        self.output_size = (h // 2, w // 2, n)
+        batch, h, w, d = input_size
+        self.output_size = (batch, h // 2, w // 2, d)
+        print(f"Pool layer\ninput size: {self.input_size}\noutput size: {self.output_size}")
 
-    def iterate_regions(self, images):
+    def iterate_regions(self, inputs):
         """
         Generates non-overlapping 2x2 image regions to pool over.
         - image is a 2d numpy array
         """
-
-        h, w, n = images.shape
-        new_h = h // 2
-        new_w = w // 2
-
-        for i in range(new_h):
-            for j in range(new_w):
-                img_region = images[(i * 2):(i * 2 + 2), (j * 2):(j * 2 + 2), :]
+        batch_size, h, w, d = self.output_size
+        for i in range(h):
+            for j in range(w):
+                img_region = inputs[:, (i * 2):(i * 2 + 2), (j * 2):(j * 2 + 2), :]
                 yield img_region, i, j
 
-    def forward(self, input):
+    def forward(self, inputs):
         """
         Performs a forward pass of the maxpool layer using the given input.
-        Returns a 3d numpy array with dimensions (h / 2, w / 2, 3, num_filters).
+        Returns a 3d numpy array with dimensions (batchsize, h / 2, w / 2, 3, num_filters).
         - input is a 3d numpy array with dimensions (h, w, 3, num_filters)
         """
-        self.last_input = input
+        self.last_input = inputs
+        batch_size, h, w, d = inputs.shape
+        output = np.zeros((batch_size, h // 2, w // 2, d))
 
-        h, w, n = input.shape
-        output = np.zeros((h // 2, w // 2, n))
-
-        for img_region, i, j in self.iterate_regions(input):
-            output[i, j, :] = np.amax(img_region)
+        for img_region, i, j in self.iterate_regions(inputs):
+            output[:, i, j, :] = np.amax(img_region, axis=(1, 2))
 
         return output
 
