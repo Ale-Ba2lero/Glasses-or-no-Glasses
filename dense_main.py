@@ -35,12 +35,12 @@ X_train, X_test, y_train, y_test = train_test_split(X,
 
 # ------------------------------------ HYPER PARAMETERS
 STEP_SIZE = 1e-0
-N_EPOCHS = 4000
+N_EPOCHS = 9000
 BATCH_SIZE = len(X_train) // 1
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Dense(30, activation=ReLU()),
+    Dense(20, activation=ReLU()),
     Dense(K, activation=Softmax())
 ], CategoricalCrossentropy())
 # ------------------------------------ FIT THE MODEL

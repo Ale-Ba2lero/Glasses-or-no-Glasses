@@ -25,11 +25,11 @@ class Model():
 
         for l in range(len(self.layers)):
             if l == 0:
-                self.layers[l].setup(input_size=X.shape[1], next_layer=self.layers[l + 1], id=l + 1)
+                self.layers[l].setup(input_shape=X.shape, next_layer=self.layers[l + 1], id=l + 1)
             elif l == len(self.layers) - 1:
-                self.layers[l].setup(input_size=self.layers[l - 1].num_neurons, id=l + 1)
+                self.layers[l].setup(input_shape=self.layers[l - 1].output_shape, id=l + 1)
             else:
-                self.layers[l].setup(input_size=self.layers[l - 1].num_neurons, next_layer=self.layers[l + 1], id=l + 1)
+                self.layers[l].setup(input_shape=self.layers[l - 1].output_shape, next_layer=self.layers[l + 1], id=l + 1)
 
         # print('\n')
 
@@ -50,16 +50,16 @@ class Model():
                 loss, acc, dscore = self.loss_function.calculate(output, y_batch)
 
                 # print loss
-                if i % 1000 == 0 and j == 0 and log == True:
+                if i % 1000 == 0 and j == 0 and log:
                     print_loss = "{:.2}".format(loss)
                     print_acc = "{:.2%}".format(acc)
-                    print(f"iteration {i}: loss {print_loss} ---- acc {print_acc}")
+                    print(f"iteration {i}: loss {print_loss} |  acc {print_acc}")
 
                 # print("\n---------------------- BACKWARD\n")
 
                 # backward step
                 for layer in reversed(self.layers):
-                    dscore = layer.backward(dscore)
+                    dscore = layer.backprop(dscore=dscore)
 
                 # parameters update
                 for layer in self.layers:

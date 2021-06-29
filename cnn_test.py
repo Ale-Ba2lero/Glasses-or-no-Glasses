@@ -12,10 +12,10 @@ train_labels = idx2numpy.convert_from_file(train_labels_file)
 test_images = idx2numpy.convert_from_file(test_images_file)
 test_labels = idx2numpy.convert_from_file(test_labels_file)
 
-train_images = train_images[:1000]
-train_labels = train_labels[:1000]
-test_images = test_images[:1000]
-test_labels = test_labels[:1000]
+train_images = train_images[:1]
+train_labels = train_labels[:1]
+test_images = test_images[:1]
+test_labels = test_labels[:1]
 
 conv = Conv3x3(8)  # 28x28x1 -> 26x26x8
 pool = MaxPool2()  # 26x26x8 -> 13x13x8

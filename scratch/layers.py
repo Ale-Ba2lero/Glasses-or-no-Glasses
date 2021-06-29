@@ -7,14 +7,11 @@ class Dense:
         self.num_neurons = num_neurons
         self.activation = activation
 
-    def setup(self, input_size, next_layer=None, id=None):
-        if type(input_size) == tuple:
-            input_size = input_size[1]
-
+    def setup(self, input_shape, next_layer=None, id=None):
         self.id = id
 
         # multiply by 0.1 to reduce the variance of our initial values
-        self.W = 0.10 * np.random.randn(input_size, self.num_neurons)
+        self.W = 0.10 * np.random.randn(input_shape[1], self.num_neurons)
 
         # print (f'W{self.id}: {self.W.shape}\n{self.W}\n')
         self.b = np.zeros((1, self.num_neurons))
@@ -22,8 +19,9 @@ class Dense:
         #    print (f'b{self.id}: {self.b.shape}\n{self.b}\n')
         self.next_layer = next_layer
 
+        self.output_shape = (input_shape[0], self.num_neurons)
         print(
-            f"Dense layer\ninput size: {input_size}\nOutput size: {self.W.shape}\n")
+            f"Dense layer {self.num_neurons} neurons\ninput size: {input_shape}\nLayer shape: {self.W.shape}\nOutput size: {self.output_shape}\n")
 
     def forward(self, input_layer):
         self.input_layer = input_layer
@@ -31,16 +29,16 @@ class Dense:
         output = self.activation.compute(output)
         return output
 
-    def backward(self, dscore):
+    def backprop(self, dscore):
         # print (f'Layer-{self.id}:')
         if self.next_layer is not None:
             dscore = self.activation.backpropagation(dscore, self.next_layer.W)
 
         self.dW = np.dot(self.input_layer.T, dscore)
-        # print (f'dW = inputs.T{self.inputs.T.shape} * dscore{dscore.shape} = {self.dW.shape}')
+        # print (f'dW = inputs.T{self.input_layer.T.shape} * dscore{dscore.shape} = {self.dW.shape}')
 
         self.db = np.sum(dscore, axis=0, keepdims=True)
-        #    print(f'db = dscore sum{self.db.shape} = {self.db}\n')
+        # print(f'db = dscore sum{self.db.shape} = {self.db.shape}\n')
 
         return dscore
 
@@ -61,16 +59,16 @@ class Conv:
         self.log = log
         # TODO add bias?
 
-    def setup(self, input_size, next_layer=None, id=None):
-        self.input_size = input_size
-        self.output_size = self.convolution_compatibility(input_size)
+    def setup(self, input_shape, next_layer=None, id=None):
+        self.input_shape = input_shape
+        self.output_size = self.convolution_compatibility(input_shape)
 
         # We divide by 10 to reduce the variance of our initial values
         self.filters = np.random.random_sample(
-            (self.kernel_size[0], self.kernel_size[1], input_size[3], self.num_filters)) * 0.1
+            (self.kernel_size[0], self.kernel_size[1], input_shape[3], self.num_filters)) * 0.1
 
         print(
-            f"Conv layer\ninput size: {self.input_size}\nfilter size: {self.filters.shape}\noutput size: {self.output_size}\n")
+            f"Conv layer\ninput: {self.input_shape}\nfilter: {self.filters.shape}\noutput: {self.output_size}\n")
 
     def convolution_compatibility(self, input_size):
         batch, h, w, _ = input_size
@@ -123,30 +121,31 @@ class Conv:
 
         return output
 
-    def backprop(self, dL_dout, learn_rate):
-        """
-        Performs a backward pass of the conv layer.
-        - dL_dout is the loss gradient for this layer's outputs.
-        - learn_rate is a float.
-        """
-        dL_dfilters = np.zeros(self.filters.shape)
+    def backprop(self, dscore, learn_rate):
+        dfilters = np.zeros(self.filters.shape)
 
         for img_region, i, j in self.iterate_regions(self.last_input):
-            for f in range(self.num_filters):
-                dL_dfilters[f] += dL_dout[i, j, f] * img_region
+            for b in range(dscore.shape[0]):
+                for f in range(self.num_filters):
+                    print("----------------------------")
+                    print(f"d filters {dfilters.shape}")
+                    print(f"dscore {dscore.shape}")
+                    print(f"img region {img_region.shape}")
+
+                    dfilters[b, :, :, f] += dscore[b, i, j, f] * img_region[b, :, :, :]
 
         # Update filters
-        self.filters -= learn_rate * dL_dfilters
+        self.filters -= learn_rate * dfilters
 
-        # return self.dL_dinput
+        return dscore
 
 
 class MaxPool:
-    def setup(self, input_size):
-        self.input_size = input_size
-        batch, h, w, d = input_size
+    def setup(self, input_shape):
+        self.input_shape = input_shape
+        batch, h, w, d = input_shape
         self.output_size = (batch, h // 2, w // 2, d)
-        print(f"Pool layer\ninput size: {self.input_size}\noutput size: {self.output_size}\n")
+        print(f"Pool layer\ninput size: {self.input_shape}\noutput size: {self.output_size}\n")
 
     def iterate_regions(self, inputs):
         """
@@ -174,42 +173,43 @@ class MaxPool:
 
         return output
 
-    def backprop(self, dL_dout):
+    def backprop(self, dscore):
         """
         Performs a backward pass of the maxpool layer.
         Returns the loss gradient for this layer's inputs.
         - dL_dout is the loss gradient for this layer's outputs.
         """
-        dL_dinput = np.zeros(self.last_input.shape)
+        dinput = np.zeros(self.last_input.shape)
 
         for img_region, i, j in self.iterate_regions(self.last_input):
-            h, w, f = img_region.shape
-            amax = np.amax(img_region, axis=(0, 1))
+            b, h, w, d = img_region.shape
+            amax = np.amax(img_region, axis=(1, 2))
 
-            for i2 in range(h):
-                for j2 in range(w):
-                    for f2 in range(f):
-                        # If the pixel was the max value, copy the gradient to it.
-                        if img_region[i2, j2, f2] == amax[f2]:
-                            dL_dinput[i * 2 + i2, j * 2 + j2, f2] = dL_dout[i, j, f2]
-
-        return dL_dinput
+            for idx_b in range(b):
+                for idx_h in range(h):
+                    for idx_w in range(w):
+                        for idx_d in range(d):
+                            # If the pixel was the max value, copy the gradient to it.
+                            if img_region[idx_b, idx_h, idx_w, idx_d] == amax[idx_b, idx_d]:
+                                dinput[idx_b, i * 2 + idx_h, j * 2 + idx_w, idx_d] = dscore[idx_b, i, j, idx_d]
+        return dinput
 
 
 class Flatten:
 
-    def setup(self, input_size):
-        self.input_size = input_size
-        batch, h, w, d = input_size
+    def setup(self, input_shape, next_layer):
+        self.input_shape = input_shape
+        self.next_layer = next_layer
+        batch, h, w, d = input_shape
         self.output_size = (batch, h * w * d)
-        print(f"Flatten layer\ninput size: {self.input_size}\noutput size: {self.output_size}\n")
+        print(f"Flatten layer\ninput size: {self.input_shape}\noutput size: {self.output_size}\n")
 
     def forward(self, inputs):
-        self.last_inputs = inputs
-
         # Hope reshape works as I expect
-        output = np.reshape(inputs, self.output_size)
+        output = inputs.reshape(self.output_size)
         return output
 
-    #def backward(self, dscore):
-
+    def backprop(self, dscore):
+        dscore = np.dot(dscore, self.next_layer.W.T)
+        dscore = dscore.reshape(self.input_shape)
+        return dscore
