@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from PIL import Image
+
+np.seterr(all='raise')
 import matplotlib.pyplot as plt
 
 # %%
@@ -29,10 +31,6 @@ for x in tqdm(range(dataset_size)):
     img = (img - np.min(img)) / np.ptp(img)
     data[x] = img
 
-"""
-plt.imshow(data[0])
-plt.show()
-"""
 conv_l = Conv(num_filters=4, kernel_size=(3, 3), padding=1, stride=1, log=False)
 pool_l = MaxPool()
 pool_l2 = MaxPool()
@@ -49,30 +47,28 @@ flatten_l.setup(input_shape=pool_l2.output_size, next_layer=dense_l)
 dense_l.setup(input_shape=flatten_l.output_size, next_layer=dense_softmax, id="dense1")
 dense_softmax.setup(input_shape=dense_l.output_shape, id="dense softmax")
 
-out = conv_l.forward(data)
-out = pool_l.forward(out)
-out = pool_l2.forward(out)
-out = flatten_l.forward(out)
-out = dense_l.forward(out)
-out = dense_softmax.forward(out)
+for i in range(100):
+    out = conv_l.forward(data)
+    out = pool_l.forward(out)
+    out = pool_l2.forward(out)
+    out = flatten_l.forward(out)
+    out = dense_l.forward(out)
+    out = dense_softmax.forward(out)
 
-print(f"out shape: {out.shape}\n")
+    loss, acc, dscore = loss_function.calculate(out, labels)
 
-loss, acc, dscore = loss_function.calculate(out, labels)
+    print_loss = "{:.2}".format(loss)
+    print_acc = "{:.2%}".format(acc)
+    print(f"loss:{print_loss} | acc:{print_acc}\n")
 
-print_loss = "{:.2}".format(loss)
-print_acc = "{:.2%}".format(acc)
-print(f"loss:{print_loss} | acc:{print_acc}\n")
+    dscore = dense_softmax.backprop(dscore)
+    dscore = dense_l.backprop(dscore)
+    dscore = flatten_l.backprop(dscore)
+    dscore = pool_l2.backprop(dscore)
+    dscore = pool_l.backprop(dscore)
+    conv_l.backprop(dscore)
 
-dscore = dense_softmax.backprop(dscore)
-print(f'dense_softmax dscore {dscore.shape}')
-dscore = dense_l.backprop(dscore)
-print(f'dense_l dscore {dscore.shape}')
-dscore = flatten_l.backprop(dscore)
-print(f'flatten_l dscore {dscore.shape}')
-dscore = pool_l2.backprop(dscore)
-print(f'pool_l2 dscore {dscore.shape}')
-dscore = pool_l.backprop(dscore)
-print(f'pool_l dscore {dscore.shape}')
-dscore = conv_l.backprop(dscore, 0.1)
-print(f'conv_l dscore {dscore.shape}')
+"""
+plt.imshow(data[0])
+plt.show()
+"""

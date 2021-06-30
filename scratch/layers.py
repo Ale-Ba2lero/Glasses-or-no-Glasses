@@ -40,9 +40,10 @@ class Dense:
         self.db = np.sum(dscore, axis=0, keepdims=True)
         # print(f'db = dscore sum{self.db.shape} = {self.db.shape}\n')
 
+        self.update()
         return dscore
 
-    def update(self, step_size):
+    def update(self, step_size=0.5):
         self.W += -step_size * self.dW
         #    print (f'perform b{self.id} update:\n{self.b} + {-step_size} X {self.db}')
         self.b += -step_size * self.db
@@ -106,38 +107,34 @@ class Conv:
                 yield img_region, i, j
 
     def forward(self, inputs):
-        self.last_input = inputs
 
         if self.padding > 0:
             inputs = self.zero_padding(inputs, self.padding)
+        self.last_input = inputs
 
         output = np.zeros(self.output_size)
-        batch, _, _, d = output.shape
+        b, _, _, d = output.shape
 
-        for b in range(batch):
-            for f in range(d):
+        for idx_b in range(b):
+            for idx_d in range(d):
                 for img_region, i, j in self.iterate_regions(inputs):
-                    output[b, i, j, f] = np.sum(img_region[b] * self.filters[:, :, :, f])
+                    output[idx_b, i, j, idx_d] = np.sum(img_region[idx_b] * self.filters[:, :, :, idx_d])
 
         return output
 
-    def backprop(self, dscore, learn_rate):
+    def backprop(self, dscore):
         dfilters = np.zeros(self.filters.shape)
 
         for img_region, i, j in self.iterate_regions(self.last_input):
             for b in range(dscore.shape[0]):
                 for f in range(self.num_filters):
-                    print("----------------------------")
-                    print(f"d filters {dfilters.shape}")
-                    print(f"dscore {dscore.shape}")
-                    print(f"img region {img_region.shape}")
+                    dfilters[:, :, :, f] += dscore[b, i, j, f] * img_region[b]
 
-                    dfilters[b, :, :, f] += dscore[b, i, j, f] * img_region[b, :, :, :]
-
-        # Update filters
-        self.filters -= learn_rate * dfilters
-
+        self.update(dscore=dfilters)
         return dscore
+
+    def update(self, dscore, learn_rate=0.5):
+        self.filters = self.filters - (dscore * learn_rate)
 
 
 class MaxPool:
