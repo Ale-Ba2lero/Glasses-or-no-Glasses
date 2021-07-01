@@ -41,10 +41,10 @@ dense_softmax = Dense(num_neurons=2, activation=Softmax())
 loss_function = CategoricalCrossentropy()
 
 conv_l.setup(input_shape=data.shape)
-pool_l.setup(input_shape=conv_l.output_size)
-pool_l2.setup(input_shape=pool_l.output_size)
-flatten_l.setup(input_shape=pool_l2.output_size, next_layer=dense_l)
-dense_l.setup(input_shape=flatten_l.output_size, next_layer=dense_softmax, id="dense1")
+pool_l.setup(input_shape=conv_l.output_shape)
+pool_l2.setup(input_shape=pool_l.output_shape)
+flatten_l.setup(input_shape=pool_l2.output_shape, next_layer=dense_l)
+dense_l.setup(input_shape=flatten_l.output_shape, next_layer=dense_softmax, id="dense1")
 dense_softmax.setup(input_shape=dense_l.output_shape, id="dense softmax")
 
 for i in range(100):

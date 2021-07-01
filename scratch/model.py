@@ -1,5 +1,6 @@
 from scratch.loss import CategoricalCrossentropy
 import numpy as np
+from scratch.layers import LayerType
 
 
 class Model():
@@ -24,14 +25,7 @@ class Model():
             print(f'batches: {n_batches}\nextra batch: {extra_batch}\n')
 
         for l in range(len(self.layers)):
-            if l == 0:
-                self.layers[l].setup(input_shape=X.shape, next_layer=self.layers[l + 1], id=l + 1)
-            elif l == len(self.layers) - 1:
-                self.layers[l].setup(input_shape=self.layers[l - 1].output_shape, id=l + 1)
-            else:
-                self.layers[l].setup(input_shape=self.layers[l - 1].output_shape, next_layer=self.layers[l + 1], id=l + 1)
-
-        # print('\n')
+            self.layer_setup(self.layers[l], l, X.shape)
 
         for i in range(self.EPOCHS):
             for j in range(n_batches + extra_batch):
@@ -61,9 +55,25 @@ class Model():
                 for layer in reversed(self.layers):
                     dscore = layer.backprop(dscore=dscore)
 
-                # parameters update
-                for layer in self.layers:
-                    layer.update(self.STEP_SIZE)
+    def layer_setup(self, layer, layer_idx, input_shape):
+        if layer.layer_type == LayerType.DENSE:
+            if layer_idx == 0:
+                self.layers[layer_idx].setup(input_shape=input_shape, next_layer=self.layers[layer_idx + 1])
+            elif layer_idx == len(self.layers) - 1:
+                self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
+            else:
+                self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape,
+                                             next_layer=self.layers[layer_idx + 1])
+        elif layer.layer_type == LayerType.CONV:
+            if layer_idx == 0:
+                self.layers[layer_idx].setup(input_shape=input_shape)
+            else:
+                self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
+        elif layer.layer_type == LayerType.MAXPOOL:
+            self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
+        elif layer.layer_type == LayerType.FLATTEN:
+            self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape,
+                                         next_layer=self.layers[layer_idx + 1])
 
     def summary(self):
         # TODO

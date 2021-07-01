@@ -1,11 +1,20 @@
 from scratch.activations import ReLU
 import numpy as np
+from enum import Enum, auto
+
+
+class LayerType(Enum):
+    DENSE = auto()
+    CONV = auto()
+    MAXPOOL = auto()
+    FLATTEN = auto()
 
 
 class Dense:
     def __init__(self, num_neurons, activation=ReLU()):
         self.num_neurons = num_neurons
         self.activation = activation
+        self.layer_type = LayerType.DENSE
 
     def setup(self, input_shape, next_layer=None, id=None):
         self.id = id
@@ -59,20 +68,21 @@ class Conv:
         self.activation = activation
         self.log = log
         # TODO add bias?
+        self.layer_type = LayerType.CONV
 
-    def setup(self, input_shape, next_layer=None, id=None):
+    def setup(self, input_shape):
         self.input_shape = input_shape
-        self.output_size = self.convolution_compatibility(input_shape)
+        self.output_shape = self.convolution_compatibility(input_shape)
 
         # We divide by 10 to reduce the variance of our initial values
         self.filters = np.random.random_sample(
             (self.kernel_size[0], self.kernel_size[1], input_shape[3], self.num_filters)) * 0.1
 
         print(
-            f"Conv layer\ninput: {self.input_shape}\nfilter: {self.filters.shape}\noutput: {self.output_size}\n")
+            f"Conv layer\ninput: {self.input_shape}\nfilter: {self.filters.shape}\noutput: {self.output_shape}\n")
 
-    def convolution_compatibility(self, input_size):
-        batch, h, w, _ = input_size
+    def convolution_compatibility(self, input_shape):
+        batch, h, w, _ = input_shape
         f_h, f_w = self.kernel_size
         s = self.stride
         p = self.padding
@@ -112,7 +122,7 @@ class Conv:
             inputs = self.zero_padding(inputs, self.padding)
         self.last_input = inputs
 
-        output = np.zeros(self.output_size)
+        output = np.zeros(self.output_shape)
         b, _, _, d = output.shape
 
         for idx_b in range(b):
@@ -138,18 +148,21 @@ class Conv:
 
 
 class MaxPool:
+    def __init__(self):
+        self.layer_type = LayerType.MAXPOOL
+
     def setup(self, input_shape):
         self.input_shape = input_shape
         batch, h, w, d = input_shape
-        self.output_size = (batch, h // 2, w // 2, d)
-        print(f"Pool layer\ninput size: {self.input_shape}\noutput size: {self.output_size}\n")
+        self.output_shape = (batch, h // 2, w // 2, d)
+        print(f"Pool layer\ninput shape: {self.input_shape}\noutput shape: {self.output_shape}\n")
 
     def iterate_regions(self, inputs):
         """
         Generates non-overlapping 2x2 image regions to pool over.
         - image is a 2d numpy array
         """
-        batch_size, h, w, d = self.output_size
+        batch_size, h, w, d = self.output_shape
         for i in range(h):
             for j in range(w):
                 img_region = inputs[:, (i * 2):(i * 2 + 2), (j * 2):(j * 2 + 2), :]
@@ -194,16 +207,19 @@ class MaxPool:
 
 class Flatten:
 
+    def __init__(self):
+        self.layer_type = LayerType.FLATTEN
+
     def setup(self, input_shape, next_layer):
         self.input_shape = input_shape
         self.next_layer = next_layer
         batch, h, w, d = input_shape
-        self.output_size = (batch, h * w * d)
-        print(f"Flatten layer\ninput size: {self.input_shape}\noutput size: {self.output_size}\n")
+        self.output_shape = (batch, h * w * d)
+        print(f"Flatten layer\ninput shape: {self.input_shape}\noutput shape: {self.output_shape}\n")
 
     def forward(self, inputs):
         # Hope reshape works as I expect
-        output = inputs.reshape(self.output_size)
+        output = inputs.reshape(self.output_shape)
         return output
 
     def backprop(self, dscore):
