@@ -63,10 +63,10 @@ for i in range(100):
 
     dscore = dense_softmax.backpropagation(dscore)
     dscore = dense_l.backpropagation(dscore)
-    dscore = flatten_l.backprop(dscore)
-    dscore = pool_l2.backprop(dscore)
-    dscore = pool_l.backprop(dscore)
-    conv_l.backprop(dscore)
+    dscore = flatten_l.backpropagation(dscore)
+    dscore = pool_l2.backpropagation(dscore)
+    dscore = pool_l.backpropagation(dscore)
+    conv_l.backpropagation(dscore)
 
 """
 plt.imshow(data[0])

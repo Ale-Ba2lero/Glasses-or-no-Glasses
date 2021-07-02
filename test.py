@@ -1,4 +1,4 @@
-#%%
+# %%
 
 import numpy as np
 
@@ -10,3 +10,8 @@ A = [[0.4, 0.2, 0.5],
 B = np.sum(A, axis=0, keepdims=True)
 C = np.sum(A, axis=1, keepdims=True)
 print(C)
+
+# %%
+
+a = np.array([1, 2, 3])
+print(type(a))

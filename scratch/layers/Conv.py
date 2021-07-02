@@ -1,0 +1,91 @@
+from scratch.activations import Activation, ReLU
+from scratch.layers.Layer import Layer, LayerType
+import numpy as np
+
+
+class Conv(Layer):
+
+    def __init__(self, num_filters, kernel_size: tuple[int, int] = (3, 3), padding: int = 0, stride: int = 1,
+                 activation: Activation = ReLU()):
+        super().__init__()
+        self.num_filters: int = num_filters
+        self.kernel_size: tuple = kernel_size
+        self.padding: int = padding
+        self.stride: int = stride
+        self.activation: Activation = activation
+        self.layer_type: LayerType = LayerType.CONV
+
+        # TODO add bias?
+        self.filters = None
+        self.last_input = None
+
+    def setup(self, input_shape: np.ndarray):
+        self.input_shape: np.ndarray = input_shape
+        self.output_shape: tuple = self.convolution_compatibility(input_shape)
+
+        # We divide by 10 to reduce the variance of our initial values
+        self.filters: np.ndarray = np.random.random_sample(
+            (self.kernel_size[0], self.kernel_size[1], input_shape[3], self.num_filters)) * 0.1
+
+        print(
+            f"Conv layer\ninput: {self.input_shape}\nfilter: {self.filters.shape}\noutput: {self.output_shape}\n")
+
+    def convolution_compatibility(self, input_shape: np.ndarray) -> tuple[int, int, int, int]:
+        batch, h, w, _ = input_shape
+        f_h, f_w = self.kernel_size
+        s = self.stride
+        p = self.padding
+
+        output_layer_h = (h - f_h + 2 * p) / s + 1
+        output_layer_w = (w - f_w + 2 * p) / s + 1
+
+        if output_layer_h % 1 != 0 or output_layer_w % 1 != 0:
+            raise ValueError('Error!: hyper parameters setting is invalid!')
+
+        return batch, int(output_layer_h), int(output_layer_w), self.num_filters
+
+    @staticmethod
+    def zero_padding(inputs: np.ndarray, padding: int = 1) -> np.ndarray:
+        batch, h, w, d = inputs.shape
+        canvas = np.zeros((batch, h + padding * 2, w + padding * 2, d))
+        canvas[:, padding:h + padding, padding:w + padding] = inputs
+        return canvas
+
+    def iterate_regions(self, inputs: np.ndarray) -> tuple[np.ndarray, int, int]:
+        _, h, w, _ = inputs.shape
+        h_limit = h - self.kernel_size[0] + 1
+        w_limit = w - self.kernel_size[1] + 1
+
+        for i in range(0, h_limit, self.stride):
+            for j in range(0, w_limit, self.stride):
+                img_region = inputs[:, i:(i + self.kernel_size[0]), j:(j + self.kernel_size[1]), :]
+                yield img_region, i, j
+
+    def forward(self, inputs: np.ndarray) -> np.ndarray:
+        if self.padding > 0:
+            inputs = self.zero_padding(inputs, self.padding)
+
+        self.last_input: np.ndarray = inputs
+        output = np.zeros(self.output_shape)
+        b, _, _, d = output.shape
+
+        for idx_b in range(b):
+            for idx_d in range(d):
+                for img_region, i, j in self.iterate_regions(inputs):
+                    output[idx_b, i, j, idx_d] = np.sum(img_region[idx_b] * self.filters[:, :, :, idx_d])
+
+        return output
+
+    def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
+        d_filters = np.zeros(self.filters.shape)
+
+        for img_region, i, j in self.iterate_regions(self.last_input):
+            for b in range(d_score.shape[0]):
+                for f in range(self.num_filters):
+                    d_filters[:, :, :, f] += d_score[b, i, j, f] * img_region[b]
+
+        self.update(d_score=d_filters)
+        return d_score
+
+    def update(self, d_score: np.ndarray, learn_rate: float = 1e-0) -> None:
+        self.filters = self.filters - (d_score * learn_rate)

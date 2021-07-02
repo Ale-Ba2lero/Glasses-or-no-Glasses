@@ -1,4 +1,3 @@
-from scratch.model import Model
 import numpy as np
 from sklearn.model_selection import train_test_split
 
@@ -6,7 +5,7 @@ import nnfs
 from nnfs.datasets import spiral_data
 
 from scratch.loss import CategoricalCrossEntropy
-from scratch.layers import Dense
+from scratch.layers.Dense import Dense
 from scratch.activations import ReLU, Softmax
 from scratch.model import Model
 

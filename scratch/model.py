@@ -1,29 +1,30 @@
 from scratch.loss import CategoricalCrossEntropy, Loss
 import numpy as np
-from scratch.layers import LayerType
+from scratch.layers.Layer import Layer, LayerType
 
 
 class Model:
-    def __init__(self, layers: list(Layers), loss_function: Loss = CategoricalCrossEntropy()) -> None:
+    def __init__(self, layers: list, loss_function: Loss = CategoricalCrossEntropy()) -> None:
 
         self.layers = layers
         self.loss_function = loss_function
 
+        self.X = None
+        self.y = None
+        self.EPOCHS = None
+        self.BATCH_SIZE = None
+        self.STEP_SIZE = None
+
+    def train(self, X: np.ndarray = None, y: np.ndarray = None, epochs: int = 1, batch_size: int = None,
+              step_size: float = 1e-0, log: bool = False):
         self.X = X
         self.y = y
         self.EPOCHS = epochs
         self.BATCH_SIZE = batch_size
         self.STEP_SIZE = step_size
 
-    def train(self, X=None, y=None, epochs=1, batch_size=None, step_size=1e-0, log=False):
-        self.X = X
-        self.y = y
-        self.EPOCHS = epochs
-        self.BATCH_SIZE = batch_size
-        self.STEP_SIZE = step_size
-
-        n_batches = len(X) // self.BATCH_SIZE
-        extra_batch = int(len(X) % self.BATCH_SIZE > 0)
+        n_batches: int = len(X) // self.BATCH_SIZE
+        extra_batch: int = int(len(X) % self.BATCH_SIZE > 0)
 
         if log >= 1:
             print(f'training set size: {len(X)}')
@@ -31,15 +32,13 @@ class Model:
             print(f'batch size: {self.BATCH_SIZE}')
             print(f'batches: {n_batches}\nextra batch: {extra_batch}\n')
 
-        for l in range(len(self.layers)):
-            self.layer_setup(self.layers[l], l, X.shape)
+        for layer_idx in range(len(self.layers)):
+            self.layer_setup(self.layers[layer_idx], layer_idx, X.shape)
 
         for i in range(self.EPOCHS):
             for j in range(n_batches + extra_batch):
                 X_batch = X[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
                 y_batch = y[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
-
-                # print("---------------------- FORWARD\n")
 
                 # forward step
                 input_layer = X_batch
@@ -48,7 +47,7 @@ class Model:
                 output = input_layer
 
                 # calculate loss
-                loss, acc, dscore = self.loss_function.calculate(output, y_batch)
+                loss, acc, d_score = self.loss_function.calculate(output, y_batch)
 
                 # print loss
                 if i % 1000 == 0 and j == 0 and log:
@@ -56,13 +55,11 @@ class Model:
                     print_acc = "{:.2%}".format(acc)
                     print(f"iteration {i}: loss {print_loss} |  acc {print_acc}")
 
-                # print("\n---------------------- BACKWARD\n")
-
                 # backward step
                 for layer in reversed(self.layers):
-                    dscore = layer.backpropagation(d_score=dscore)
+                    d_score = layer.backpropagation(d_score=d_score)
 
-    def layer_setup(self, layer, layer_idx, input_shape):
+    def layer_setup(self, layer: Layer, layer_idx: int, input_shape: tuple):
         if layer.layer_type == LayerType.DENSE:
             if layer_idx == 0:
                 self.layers[layer_idx].setup(input_shape=input_shape, next_layer=self.layers[layer_idx + 1])
