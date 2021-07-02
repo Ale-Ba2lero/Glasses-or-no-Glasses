@@ -1,7 +1,7 @@
-from scratch.activations import ReLU
+from scratch.activations import Activation, ReLU
 import numpy as np
 from enum import Enum, auto
-
+import abc
 
 class LayerType(Enum):
     DENSE = auto()
@@ -9,52 +9,55 @@ class LayerType(Enum):
     MAXPOOL = auto()
     FLATTEN = auto()
 
+class Layer(abc.ABC):
+
+    @abc.abstractmethod
+    def setup(self, input_shape: tuple, y_true: np.array) -> (np.array, float):
+        pass
 
 class Dense:
-    def __init__(self, num_neurons, activation=ReLU()):
-        self.num_neurons = num_neurons
-        self.activation = activation
-        self.layer_type = LayerType.DENSE
+    def __init__(self, num_neurons, activation=ReLU()) -> None:
+        self.num_neurons: int = num_neurons
+        self.activation: Activation = activation
+        self.layer_type: LayerType = LayerType.DENSE
 
-    def setup(self, input_shape, next_layer=None, id=None):
-        self.id = id
+        self.batch_size = None
+        self.W = None
+        self.dW = None
+        self.b = None
+        self.db = None
+        self.next_layer = None
+        self.output_shape = None
+        self.input_layer = None
 
+    def setup(self, input_shape, next_layer=None) -> None:
+        self.batch_size: int = input_shape[1]
         # multiply by 0.1 to reduce the variance of our initial values
-        self.W = 0.10 * np.random.randn(input_shape[1], self.num_neurons)
+        self.W: np.array = 0.1 * np.random.randn(self.batch_size, self.num_neurons)
+        self.b: np.array = np.zeros((1, self.num_neurons))
+        self.next_layer: np.array = next_layer
+        self.output_shape: tuple = (self.batch_size, self.num_neurons)
 
-        # print (f'W{self.id}: {self.W.shape}\n{self.W}\n')
-        self.b = np.zeros((1, self.num_neurons))
-
-        #    print (f'b{self.id}: {self.b.shape}\n{self.b}\n')
-        self.next_layer = next_layer
-
-        self.output_shape = (input_shape[0], self.num_neurons)
         print(
-            f"Dense layer {self.num_neurons} neurons\ninput size: {input_shape}\nLayer shape: {self.W.shape}\nOutput size: {self.output_shape}\n")
+            f"Dense layer {self.num_neurons} neurons\ninput size: {input_shape}\nLayer shape: {self.W.shape}\nOutput "
+            f"size: {self.output_shape}\n")
 
-    def forward(self, input_layer):
-        self.input_layer = input_layer
+    def forward(self, input_layer) -> np.array:
+        self.input_layer: np.array = input_layer
         output = np.dot(input_layer, self.W) + self.b
         output = self.activation.compute(output)
         return output
 
-    def backprop(self, dscore):
-        # print (f'Layer-{self.id}:')
+    def backpropagation(self, d_score) -> np.array:
         if self.next_layer is not None:
-            dscore = self.activation.backpropagation(dscore, self.next_layer.W)
-
-        self.dW = np.dot(self.input_layer.T, dscore)
-        # print (f'dW = inputs.T{self.input_layer.T.shape} * dscore{dscore.shape} = {self.dW.shape}')
-
-        self.db = np.sum(dscore, axis=0, keepdims=True)
-        # print(f'db = dscore sum{self.db.shape} = {self.db.shape}\n')
-
+            d_score = self.activation.backpropagation(d_score, self.next_layer.W)
+        self.dW: np.array = np.dot(self.input_layer.T, d_score)
+        self.db: np.array = np.sum(d_score, axis=0, keepdims=True)
         self.update()
-        return dscore
+        return d_score
 
-    def update(self, step_size=0.5):
+    def update(self, step_size=1e-0) -> None:
         self.W += -step_size * self.dW
-        #    print (f'perform b{self.id} update:\n{self.b} + {-step_size} X {self.db}')
         self.b += -step_size * self.db
 
 
@@ -143,7 +146,7 @@ class Conv:
         self.update(dscore=dfilters)
         return dscore
 
-    def update(self, dscore, learn_rate=0.5):
+    def update(self, dscore, learn_rate=1e-0):
         self.filters = self.filters - (dscore * learn_rate)
 
 

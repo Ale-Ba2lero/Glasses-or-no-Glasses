@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 from PIL import Image
 
-from scratch.loss import CategoricalCrossentropy
+from scratch.loss import CategoricalCrossEntropy
 from scratch.layers import Conv, MaxPool, Dense, Flatten
 from scratch.activations import ReLU, Softmax
 from scratch.model import Model
@@ -55,7 +55,7 @@ nn = Model([
     Flatten(),
     Dense(8, activation=ReLU()),
     Dense(2, activation=Softmax())
-], CategoricalCrossentropy())
+], CategoricalCrossEntropy())
 # ------------------------------------ FIT THE MODEL
 nn.train(X=X_train,
          y=y_train,

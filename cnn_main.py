@@ -1,7 +1,7 @@
 # %%
 from scratch.layers import Conv, MaxPool, Dense, Flatten
 from scratch.activations import ReLU, Softmax
-from scratch.loss import CategoricalCrossentropy
+from scratch.loss import CategoricalCrossEntropy
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
@@ -38,14 +38,14 @@ flatten_l = Flatten()
 dense_l = Dense(num_neurons=8, activation=ReLU())
 dense_softmax = Dense(num_neurons=2, activation=Softmax())
 
-loss_function = CategoricalCrossentropy()
+loss_function = CategoricalCrossEntropy()
 
 conv_l.setup(input_shape=data.shape)
 pool_l.setup(input_shape=conv_l.output_shape)
 pool_l2.setup(input_shape=pool_l.output_shape)
 flatten_l.setup(input_shape=pool_l2.output_shape, next_layer=dense_l)
-dense_l.setup(input_shape=flatten_l.output_shape, next_layer=dense_softmax, id="dense1")
-dense_softmax.setup(input_shape=dense_l.output_shape, id="dense softmax")
+dense_l.setup(input_shape=flatten_l.output_shape, next_layer=dense_softmax, layer_id="dense1")
+dense_softmax.setup(input_shape=dense_l.output_shape, layer_id="dense softmax")
 
 for i in range(100):
     out = conv_l.forward(data)
@@ -61,8 +61,8 @@ for i in range(100):
     print_acc = "{:.2%}".format(acc)
     print(f"loss:{print_loss} | acc:{print_acc}\n")
 
-    dscore = dense_softmax.backprop(dscore)
-    dscore = dense_l.backprop(dscore)
+    dscore = dense_softmax.backpropagation(dscore)
+    dscore = dense_l.backpropagation(dscore)
     dscore = flatten_l.backprop(dscore)
     dscore = pool_l2.backprop(dscore)
     dscore = pool_l.backprop(dscore)

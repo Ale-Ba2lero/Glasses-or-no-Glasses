@@ -1,12 +1,19 @@
-from scratch.loss import CategoricalCrossentropy
+from scratch.loss import CategoricalCrossEntropy, Loss
 import numpy as np
 from scratch.layers import LayerType
 
 
-class Model():
-    def __init__(self, layers=[], loss_function=CategoricalCrossentropy()) -> None:
+class Model:
+    def __init__(self, layers: list(Layers), loss_function: Loss = CategoricalCrossEntropy()) -> None:
+
         self.layers = layers
         self.loss_function = loss_function
+
+        self.X = X
+        self.y = y
+        self.EPOCHS = epochs
+        self.BATCH_SIZE = batch_size
+        self.STEP_SIZE = step_size
 
     def train(self, X=None, y=None, epochs=1, batch_size=None, step_size=1e-0, log=False):
         self.X = X
@@ -53,7 +60,7 @@ class Model():
 
                 # backward step
                 for layer in reversed(self.layers):
-                    dscore = layer.backprop(dscore=dscore)
+                    dscore = layer.backpropagation(d_score=dscore)
 
     def layer_setup(self, layer, layer_idx, input_shape):
         if layer.layer_type == LayerType.DENSE:
