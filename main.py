@@ -5,7 +5,7 @@ from tqdm import tqdm
 from PIL import Image
 
 from scratch.loss import CategoricalCrossEntropy
-from scratch.layers import Conv, MaxPool, Dense, Flatten
+from scratch.layers import conv, maxpool, dense, flatten
 from scratch.activations import ReLU, Softmax
 from scratch.model import Model
 
@@ -50,11 +50,11 @@ BATCH_SIZE = len(X_train) // 1
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv(num_filters=4, padding=1),
-    MaxPool(),
-    Flatten(),
-    Dense(8, activation=ReLU()),
-    Dense(2, activation=Softmax())
+    conv(num_filters=4, padding=1),
+    maxpool(),
+    flatten(),
+    dense(8, activation=ReLU()),
+    dense(2, activation=Softmax())
 ], CategoricalCrossEntropy())
 # ------------------------------------ FIT THE MODEL
 nn.train(X=X_train,

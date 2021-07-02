@@ -1,5 +1,5 @@
 # %%
-from scratch.layers import Conv, MaxPool, Dense, Flatten
+from scratch.layers import conv, maxpool, dense, flatten
 from scratch.activations import ReLU, Softmax
 from scratch.loss import CategoricalCrossEntropy
 import numpy as np
@@ -31,12 +31,11 @@ for x in tqdm(range(dataset_size)):
     img = (img - np.min(img)) / np.ptp(img)
     data[x] = img
 
-conv_l = Conv(num_filters=4, kernel_size=(3, 3), padding=1, stride=1, log=False)
-pool_l = MaxPool()
-pool_l2 = MaxPool()
-flatten_l = Flatten()
-dense_l = Dense(num_neurons=8, activation=ReLU())
-dense_softmax = Dense(num_neurons=2, activation=Softmax())
+pool_l = maxpool()
+pool_l2 = maxpool()
+flatten_l = flatten()
+dense_l = dense(num_neurons=8, activation=ReLU())
+dense_softmax = dense(num_neurons=2, activation=Softmax())
 
 loss_function = CategoricalCrossEntropy()
 

@@ -1,5 +1,5 @@
 from scratch.activations import Activation, ReLU
-from scratch.layers.Layer import Layer, LayerType
+from scratch.layers.layer import Layer, LayerType
 import numpy as np
 
 
@@ -18,11 +18,11 @@ class Dense(Layer):
         self.next_layer = None
         self.input_layer = None
 
-    def setup(self, input_shape, next_layer=None) -> None:
+    def setup(self, input_shape: tuple, next_layer=None) -> None:
         self.input_shape = input_shape
-        self.batch_size: int = input_shape[1]
+        self.batch_size: int = input_shape[0]
         # multiply by 0.1 to reduce the variance of our initial values
-        self.W: np.ndarray = 0.1 * np.random.randn(self.batch_size, self.num_neurons)
+        self.W: np.ndarray = 0.1 * np.random.randn(input_shape[1], self.num_neurons)
         self.b: np.ndarray = np.zeros((1, self.num_neurons))
         self.next_layer: np.ndarray = next_layer
         self.output_shape: tuple[int, int] = (self.batch_size, self.num_neurons)
@@ -42,7 +42,6 @@ class Dense(Layer):
             d_score = self.activation.backpropagation(d_score, self.next_layer.W)
         self.dW: np.ndarray = np.dot(self.input_layer.T, d_score)
         self.db: np.ndarray = np.sum(d_score, axis=0, keepdims=True)
-        self.update()
         return d_score
 
     def update(self, step_size: float = 1e-0) -> None:

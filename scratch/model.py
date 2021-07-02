@@ -1,6 +1,6 @@
 from scratch.loss import CategoricalCrossEntropy, Loss
 import numpy as np
-from scratch.layers.Layer import Layer, LayerType
+from scratch.layers.layer import Layer, LayerType
 
 
 class Model:
@@ -54,10 +54,15 @@ class Model:
                     print_loss = "{:.2}".format(loss)
                     print_acc = "{:.2%}".format(acc)
                     print(f"iteration {i}: loss {print_loss} |  acc {print_acc}")
+                    print(np.sum(d_score))
 
                 # backward step
                 for layer in reversed(self.layers):
                     d_score = layer.backpropagation(d_score=d_score)
+
+                for layer in self.layers:
+                    if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
+                        layer.update()
 
     def layer_setup(self, layer: Layer, layer_idx: int, input_shape: tuple):
         if layer.layer_type == LayerType.DENSE:

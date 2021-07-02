@@ -1,4 +1,4 @@
-from scratch.layers.Layer import Layer, LayerType
+from scratch.layers.layer import Layer, LayerType
 import numpy as np
 
 

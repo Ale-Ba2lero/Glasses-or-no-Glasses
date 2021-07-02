@@ -18,7 +18,7 @@ class Layer(abc.ABC):
         self.output_shape = None
 
     @abc.abstractmethod
-    def setup(self, input_shape: tuple[int, int, int, int]) -> None:
+    def setup(self, input_shape: tuple) -> None:
         pass
 
     @abc.abstractmethod

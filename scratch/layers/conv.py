@@ -1,5 +1,5 @@
 from scratch.activations import Activation, ReLU
-from scratch.layers.Layer import Layer, LayerType
+from scratch.layers.layer import Layer, LayerType
 import numpy as np
 
 
@@ -17,6 +17,7 @@ class Conv(Layer):
 
         # TODO add bias?
         self.filters = None
+        self.d_filters = None
         self.last_input = None
 
     def setup(self, input_shape: np.ndarray):
@@ -84,8 +85,8 @@ class Conv(Layer):
                 for f in range(self.num_filters):
                     d_filters[:, :, :, f] += d_score[b, i, j, f] * img_region[b]
 
-        self.update(d_score=d_filters)
+        self.d_filters = d_filters
         return d_score
 
-    def update(self, d_score: np.ndarray, learn_rate: float = 1e-0) -> None:
-        self.filters = self.filters - (d_score * learn_rate)
+    def update(self, learn_rate: float = 1e-0) -> None:
+        self.filters = self.filters + (-learn_rate * self.d_filters)

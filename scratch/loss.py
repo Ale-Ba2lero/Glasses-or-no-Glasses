@@ -34,7 +34,7 @@ class CategoricalCrossEntropy(Loss):
         y_pred_clipped = np.clip(self.y_pred, 1e-7, 1 - 1e-7)
         correct_confidences = y_pred_clipped[range(samples), y_true]
         negative_log_likelihood = -np.log(correct_confidences)
-        acc = sum([1 for i in range(samples) if np.argmax(y_pred[i]) == y_true[i]]) / samples
+        acc = sum([1 for i in range(samples) if np.argmax(self.y_pred[i]) == self.y_true[i]]) / samples
         return negative_log_likelihood, acc
 
     def backpropagation(self):
