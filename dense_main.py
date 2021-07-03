@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler
 
 import nnfs
 from nnfs.datasets import spiral_data
@@ -38,12 +37,12 @@ X_train, X_test, y_train, y_test = train_test_split(X,
 # ------------------------------------ HYPER PARAMETERS
 STEP_SIZE = 1e-0
 N_EPOCHS = 9000
-BATCH_SIZE = len(X_train) // 1
+BATCH_SIZE = len(X_train) // 4
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
     Dense(100, activation=ReLU()),
-    Dense(50, activation=ReLU()),
+    Dense(10, activation=ReLU()),
     Dense(K, activation=Softmax())
 ], CategoricalCrossEntropy())
 # ------------------------------------ FIT THE MODEL

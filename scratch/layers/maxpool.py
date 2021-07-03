@@ -13,7 +13,7 @@ class MaxPool(Layer):
         self.input_shape: tuple = input_shape
         batch, h, w, d = input_shape
         self.output_shape: tuple[int, int, int, int] = (batch, h // 2, w // 2, d)
-        print(f"Pool layer\ninput shape: {self.input_shape}\noutput shape: {self.output_shape}\n")
+        # print(f"Pool layer\ninput shape: {self.input_shape}\noutput shape: {self.output_shape}\n")
 
     def iterate_regions(self, inputs: np.ndarray) -> np.ndarray:
         batch_size, h, w, d = self.output_shape

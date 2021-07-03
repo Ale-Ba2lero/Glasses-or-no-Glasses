@@ -1,14 +1,16 @@
 # %%
-from scratch.layers import conv, maxpool, dense, flatten
+from scratch.layers.conv import Conv
+from scratch.layers.dense import Dense
+from scratch.layers.maxpool import MaxPool
+from scratch.layers.flatten import Flatten
 from scratch.activations import ReLU, Softmax
 from scratch.loss import CategoricalCrossEntropy
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from PIL import Image
-
-np.seterr(all='raise')
 import matplotlib.pyplot as plt
+
 
 # %%
 train_path = "./dataset/train.csv"
@@ -16,7 +18,7 @@ directory = "./dataset/faces-spring-2020/faces-spring-2020/"
 train_ds = pd.read_csv(train_path)
 
 # for testing purposes we will select a subset of the whole dataset
-dataset_size = 5
+dataset_size = 100
 image_size = 64
 
 labels = train_ds.iloc[:dataset_size, -1].to_numpy()
@@ -31,11 +33,12 @@ for x in tqdm(range(dataset_size)):
     img = (img - np.min(img)) / np.ptp(img)
     data[x] = img
 
-pool_l = maxpool()
-pool_l2 = maxpool()
-flatten_l = flatten()
-dense_l = dense(num_neurons=8, activation=ReLU())
-dense_softmax = dense(num_neurons=2, activation=Softmax())
+conv_l = Conv(num_filters=4, kernel_size=(3, 3), padding=1, stride=1)
+pool_l = MaxPool()
+pool_l2 = MaxPool()
+flatten_l = Flatten()
+dense_l = Dense(num_neurons=8, activation=ReLU())
+dense_softmax = Dense(num_neurons=2, activation=Softmax())
 
 loss_function = CategoricalCrossEntropy()
 
@@ -43,8 +46,8 @@ conv_l.setup(input_shape=data.shape)
 pool_l.setup(input_shape=conv_l.output_shape)
 pool_l2.setup(input_shape=pool_l.output_shape)
 flatten_l.setup(input_shape=pool_l2.output_shape, next_layer=dense_l)
-dense_l.setup(input_shape=flatten_l.output_shape, next_layer=dense_softmax, layer_id="dense1")
-dense_softmax.setup(input_shape=dense_l.output_shape, layer_id="dense softmax")
+dense_l.setup(input_shape=flatten_l.output_shape, next_layer=dense_softmax)
+dense_softmax.setup(input_shape=dense_l.output_shape)
 
 for i in range(100):
     out = conv_l.forward(data)
@@ -66,6 +69,10 @@ for i in range(100):
     dscore = pool_l2.backpropagation(dscore)
     dscore = pool_l.backpropagation(dscore)
     conv_l.backpropagation(dscore)
+
+    dense_softmax.update()
+    dense_l.update()
+    conv_l.update()
 
 """
 plt.imshow(data[0])

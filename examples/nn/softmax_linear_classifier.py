@@ -1,5 +1,4 @@
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -37,7 +36,7 @@ num_examples = X.shape[0]
 
 loss = 0
 
-for i in range(201):
+for i in range(10000):
   # evaluate class scores, [N x K], for a linear classifier
   scores = np.dot(X, W) + b
 
@@ -53,7 +52,7 @@ for i in range(201):
   reg_loss = 0.5*reg*np.sum(W*W)
   loss = data_loss + reg_loss
 
-  if i % 10 == 0:
+  if i % 1000 == 0:
     print (f"iteration {i}: loss {loss}")
 
   # compute the gradient on scores w/ backpropagation

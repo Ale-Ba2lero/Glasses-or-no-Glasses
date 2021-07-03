@@ -9,12 +9,12 @@ class Flatten(Layer):
         self.layer_type = LayerType.FLATTEN
         self.next_layer = None
 
-    def setup(self, input_shape: tuple[int, int, int, int], next_layer: np.ndarray = None) -> None:
+    def setup(self, input_shape: tuple[int, int, int, int], next_layer: Layer = None) -> None:
         self.input_shape: tuple = input_shape
-        self.next_layer: np.ndarray = next_layer
+        self.next_layer: Layer = next_layer
         batch, h, w, d = input_shape
         self.output_shape: tuple[int, int] = (batch, h * w * d)
-        print(f"Flatten layer\ninput shape: {self.input_shape}\noutput shape: {self.output_shape}\n")
+        # print(f"Flatten layer\ninput shape: {self.input_shape}\noutput shape: {self.output_shape}\n")
 
     def forward(self, inputs: np.ndarray) -> np.ndarray:
         # Hope reshape works as I expect

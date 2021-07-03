@@ -1,11 +1,12 @@
 from scratch.activations import Activation, ReLU
 from scratch.layers.layer import Layer, LayerType
 import numpy as np
+from tqdm import tqdm
 
 
 class Conv(Layer):
 
-    def __init__(self, num_filters, kernel_size: tuple[int, int] = (3, 3), padding: int = 0, stride: int = 1,
+    def __init__(self, num_filters: int, kernel_size: (int, int) = (3, 3), padding: int = 0, stride: int = 1,
                  activation: Activation = ReLU()):
         super().__init__()
         self.num_filters: int = num_filters
@@ -20,18 +21,18 @@ class Conv(Layer):
         self.d_filters = None
         self.last_input = None
 
-    def setup(self, input_shape: np.ndarray):
-        self.input_shape: np.ndarray = input_shape
+    def setup(self, input_shape: tuple):
+        self.input_shape: tuple = input_shape
         self.output_shape: tuple = self.convolution_compatibility(input_shape)
 
         # We divide by 10 to reduce the variance of our initial values
         self.filters: np.ndarray = np.random.random_sample(
             (self.kernel_size[0], self.kernel_size[1], input_shape[3], self.num_filters)) * 0.1
 
-        print(
-            f"Conv layer\ninput: {self.input_shape}\nfilter: {self.filters.shape}\noutput: {self.output_shape}\n")
+        # print(
+        #    f"Conv layer\ninput: {self.input_shape}\nfilter: {self.filters.shape}\noutput: {self.output_shape}\n")
 
-    def convolution_compatibility(self, input_shape: np.ndarray) -> tuple[int, int, int, int]:
+    def convolution_compatibility(self, input_shape: tuple) -> (int, int, int, int):
         batch, h, w, _ = input_shape
         f_h, f_w = self.kernel_size
         s = self.stride
@@ -52,8 +53,8 @@ class Conv(Layer):
         canvas[:, padding:h + padding, padding:w + padding] = inputs
         return canvas
 
-    def iterate_regions(self, inputs: np.ndarray) -> tuple[np.ndarray, int, int]:
-        _, h, w, _ = inputs.shape
+    def iterate_regions(self, inputs: np.ndarray) -> (np.ndarray, int, int):
+        batch_size, h, w, num_filters = inputs.shape
         h_limit = h - self.kernel_size[0] + 1
         w_limit = w - self.kernel_size[1] + 1
 
@@ -65,15 +66,14 @@ class Conv(Layer):
     def forward(self, inputs: np.ndarray) -> np.ndarray:
         if self.padding > 0:
             inputs = self.zero_padding(inputs, self.padding)
-
         self.last_input: np.ndarray = inputs
         output = np.zeros(self.output_shape)
-        b, _, _, d = output.shape
+        batch_size, _, _, volume_depth = output.shape
 
-        for idx_b in range(b):
-            for idx_d in range(d):
-                for img_region, i, j in self.iterate_regions(inputs):
-                    output[idx_b, i, j, idx_d] = np.sum(img_region[idx_b] * self.filters[:, :, :, idx_d])
+        for img_region, i, j in self.iterate_regions(inputs):
+            for d in range(volume_depth):
+                output[:, i, j, d] = np.sum(img_region * self.filters[:, :, :, d], axis=(1, 2, 3))
+                # output[i, j] = np.sum(img_region * self.filters, axis=(1, 2))
 
         return output
 

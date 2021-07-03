@@ -1,6 +1,8 @@
+# %%
+
 import idx2numpy
 import numpy as np
-from examples.conv import Conv3x3, MaxPool2, Softmax
+from examples.cnn.cnn_layers import Conv3x3, MaxPool2, Softmax
 
 train_images_file = 'dataset/train-images.idx3-ubyte'
 train_labels_file = 'dataset/train-labels.idx1-ubyte'
@@ -12,10 +14,10 @@ train_labels = idx2numpy.convert_from_file(train_labels_file)
 test_images = idx2numpy.convert_from_file(test_images_file)
 test_labels = idx2numpy.convert_from_file(test_labels_file)
 
-train_images = train_images[:1]
-train_labels = train_labels[:1]
-test_images = test_images[:1]
-test_labels = test_labels[:1]
+train_images = train_images[:1000]
+train_labels = train_labels[:1000]
+test_images = test_images[:100]
+test_labels = test_labels[:100]
 
 conv = Conv3x3(8)  # 28x28x1 -> 26x26x8
 pool = MaxPool2()  # 26x26x8 -> 13x13x8
@@ -69,7 +71,7 @@ def train(img, label, lr=.005):
 print('MNIST CNN initialized!')
 
 # Train the CNN for 3 epochs
-for epoch in range(1):
+for epoch in range(3):
     print('--- Epoch %d ---' % (epoch + 1))
 
     # Shuffle the training data

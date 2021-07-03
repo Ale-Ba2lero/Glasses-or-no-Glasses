@@ -49,12 +49,6 @@ class Conv3x3:
 
         for img_region, i, j in self.iterate_regions(self.last_input):
             for f in range(self.n_filters):
-                if i == 1 and j == 1 and f == 0:
-                    print("----------------------------")
-                    print(f"d filters {dL_dfilters.shape}\n {dL_dfilters[f].shape}")
-                    print(f"dscore {dL_dout.shape}\n {dL_dout[i, j, f].shape}")
-                    print(f"img region {img_region.shape}")
-
                 dL_dfilters[f] += dL_dout[i, j, f] * img_region
 
         # Update filters

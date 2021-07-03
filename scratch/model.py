@@ -1,6 +1,7 @@
 from scratch.loss import CategoricalCrossEntropy, Loss
 import numpy as np
 from scratch.layers.layer import Layer, LayerType
+from tqdm import tqdm
 
 
 class Model:
@@ -15,8 +16,10 @@ class Model:
         self.BATCH_SIZE = None
         self.STEP_SIZE = None
 
+
+
     def train(self, X: np.ndarray = None, y: np.ndarray = None, epochs: int = 1, batch_size: int = None,
-              step_size: float = 1e-0, log: bool = False):
+              step_size: float = 1e-0):
         self.X = X
         self.y = y
         self.EPOCHS = epochs
@@ -26,35 +29,33 @@ class Model:
         n_batches: int = len(X) // self.BATCH_SIZE
         extra_batch: int = int(len(X) % self.BATCH_SIZE > 0)
 
-        if log >= 1:
-            print(f'training set size: {len(X)}')
-            print(f'epochs: {self.EPOCHS}')
-            print(f'batch size: {self.BATCH_SIZE}')
-            print(f'batches: {n_batches}\nextra batch: {extra_batch}\n')
+        print(f'training set size: {len(X)}')
+        print(f'epochs: {self.EPOCHS}')
+        print(f'batch size: {self.BATCH_SIZE}')
+        print(f'batches: {n_batches}\nextra batch: {extra_batch}\n')
 
         for layer_idx in range(len(self.layers)):
             self.layer_setup(self.layers[layer_idx], layer_idx, X.shape)
 
-        for i in range(self.EPOCHS):
+        for i in tqdm(range(self.EPOCHS)):
             for j in range(n_batches + extra_batch):
+
                 X_batch = X[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
                 y_batch = y[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
 
                 # forward step
-                input_layer = X_batch
+                output = X_batch
                 for layer in self.layers:
-                    input_layer = layer.forward(input_layer)
-                output = input_layer
+                    output = layer.forward(output)
 
                 # calculate loss
                 loss, acc, d_score = self.loss_function.calculate(output, y_batch)
 
                 # print loss
-                if i % 1000 == 0 and j == 0 and log:
+                if i % 50 == 0 and j == 0:
                     print_loss = "{:.2}".format(loss)
                     print_acc = "{:.2%}".format(acc)
-                    print(f"iteration {i}: loss {print_loss} |  acc {print_acc}")
-                    print(np.sum(d_score))
+                    print(f"\niteration {i}: loss {print_loss} |  acc {print_acc}")
 
                 # backward step
                 for layer in reversed(self.layers):
@@ -89,12 +90,10 @@ class Model:
         pass
 
     def evaluate(self, X_test, y_test):
-
         # forward step
-        input_layer = X_test
+        output = X_test
         for layer in self.layers:
-            input_layer = layer.forward(input_layer)
-        output = input_layer
+            output = layer.forward(output)
 
         predicted_class = np.argmax(output, axis=1)
         acc = "{:.2%}".format(np.mean(predicted_class == y_test))
