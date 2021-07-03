@@ -16,6 +16,7 @@ class Layer(abc.ABC):
         self.layer_type = None
         self.input_shape = None
         self.output_shape = None
+        self.batch_size = None
 
     @abc.abstractmethod
     def setup(self, input_shape: tuple) -> None:

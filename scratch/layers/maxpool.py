@@ -9,16 +9,17 @@ class MaxPool(Layer):
         self.layer_type = LayerType.MAXPOOL
         self.last_input = None
 
-    def setup(self, input_shape: tuple[int, int, int, int]) -> None:
+    def setup(self, input_shape: (int, int, int)) -> None:
         self.input_shape: tuple = input_shape
-        batch, h, w, d = input_shape
-        self.output_shape: tuple[int, int, int, int] = (batch, h // 2, w // 2, d)
+        h, w, d = input_shape
+        self.output_shape: (int, int, int) = (h // 2, w // 2, d)
         # print(f"Pool layer\ninput shape: {self.input_shape}\noutput shape: {self.output_shape}\n")
 
-    def iterate_regions(self, inputs: np.ndarray) -> np.ndarray:
-        batch_size, h, w, d = self.output_shape
-        for i in range(h):
-            for j in range(w):
+    @staticmethod
+    def iterate_regions(inputs: np.ndarray) -> np.ndarray:
+        _, h, w, _ = inputs.shape
+        for i in range(h // 2):
+            for j in range(w // 2):
                 img_region = inputs[:, (i * 2):(i * 2 + 2), (j * 2):(j * 2 + 2), :]
                 yield img_region, i, j
 

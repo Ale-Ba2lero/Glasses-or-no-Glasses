@@ -18,14 +18,13 @@ class Dense(Layer):
         self.next_layer = None
         self.input_layer = None
 
-    def setup(self, input_shape: tuple, next_layer: Layer = None) -> None:
+    def setup(self, input_shape: int, next_layer: Layer = None) -> None:
         self.input_shape = input_shape
-        self.batch_size: int = input_shape[0]
         # multiply by 0.1 to reduce the variance of our initial values
-        self.W: np.ndarray = 0.01 * np.random.randn(input_shape[1], self.num_neurons)
+        self.W: np.ndarray = 0.01 * np.random.randn(self.input_shape, self.num_neurons)
         self.b: np.ndarray = np.zeros((1, self.num_neurons))
         self.next_layer: Layer = next_layer
-        self.output_shape: tuple[int, int] = (self.batch_size, self.num_neurons)
+        self.output_shape: int = self.num_neurons
 
         # print(
         #    f"Dense layer {self.num_neurons} neurons\ninput size: {input_shape}\nLayer shape: {self.W.shape}\nOutput "

@@ -24,16 +24,16 @@ class Conv(Layer):
     def setup(self, input_shape: tuple):
         self.input_shape: tuple = input_shape
         self.output_shape: tuple = self.convolution_compatibility(input_shape)
-
+        channel_RGB = 3
         # We divide by 10 to reduce the variance of our initial values
         self.filters: np.ndarray = np.random.random_sample(
-            (self.kernel_size[0], self.kernel_size[1], input_shape[3], self.num_filters)) * 0.1
+            (self.kernel_size[0], self.kernel_size[1], channel_RGB, self.num_filters)) * 0.1
 
         # print(
         #    f"Conv layer\ninput: {self.input_shape}\nfilter: {self.filters.shape}\noutput: {self.output_shape}\n")
 
-    def convolution_compatibility(self, input_shape: tuple) -> (int, int, int, int):
-        batch, h, w, _ = input_shape
+    def convolution_compatibility(self, input_shape: tuple) -> (int, int, int):
+        h, w, _ = input_shape
         f_h, f_w = self.kernel_size
         s = self.stride
         p = self.padding
@@ -44,17 +44,16 @@ class Conv(Layer):
         if output_layer_h % 1 != 0 or output_layer_w % 1 != 0:
             raise ValueError('Error!: hyper parameters setting is invalid!')
 
-        return batch, int(output_layer_h), int(output_layer_w), self.num_filters
+        return int(output_layer_h), int(output_layer_w), self.num_filters
 
-    @staticmethod
-    def zero_padding(inputs: np.ndarray, padding: int = 1) -> np.ndarray:
-        batch, h, w, d = inputs.shape
-        canvas = np.zeros((batch, h + padding * 2, w + padding * 2, d))
+    def zero_padding(self, inputs: np.ndarray, padding: int = 1) -> np.ndarray:
+        _, h, w, d = inputs.shape
+        canvas = np.zeros((self.batch_size, h + padding * 2, w + padding * 2, d))
         canvas[:, padding:h + padding, padding:w + padding] = inputs
         return canvas
 
     def iterate_regions(self, inputs: np.ndarray) -> (np.ndarray, int, int):
-        batch_size, h, w, num_filters = inputs.shape
+        _, h, w, num_filters = inputs.shape
         h_limit = h - self.kernel_size[0] + 1
         w_limit = w - self.kernel_size[1] + 1
 
@@ -64,16 +63,20 @@ class Conv(Layer):
                 yield img_region, i, j
 
     def forward(self, inputs: np.ndarray) -> np.ndarray:
+        self.batch_size: int = inputs.shape[0]
+
         if self.padding > 0:
             inputs = self.zero_padding(inputs, self.padding)
+
         self.last_input: np.ndarray = inputs
-        output = np.zeros(self.output_shape)
-        batch_size, _, _, volume_depth = output.shape
+
+        output = np.zeros((self.batch_size,) + self.output_shape)
+
+        volume_depth = output.shape[3]
 
         for img_region, i, j in self.iterate_regions(inputs):
             for d in range(volume_depth):
                 output[:, i, j, d] = np.sum(img_region * self.filters[:, :, :, d], axis=(1, 2, 3))
-                # output[i, j] = np.sum(img_region * self.filters, axis=(1, 2))
 
         return output
 

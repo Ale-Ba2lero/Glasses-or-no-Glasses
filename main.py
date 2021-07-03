@@ -1,3 +1,4 @@
+# %%
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
@@ -41,6 +42,8 @@ for x in tqdm(range(dataset_size)):
     img = (img - np.min(img)) / np.ptp(img)
     data[x] = img
 
+
+# %%
 X_train, X_test, y_train, y_test = train_test_split(data,
                                                     labels,
                                                     test_size=0.20,
@@ -49,14 +52,14 @@ X_train, X_test, y_train, y_test = train_test_split(data,
 # ------------------------------------ HYPER PARAMETERS
 STEP_SIZE = 1e-0
 N_EPOCHS = 3
-BATCH_SIZE = len(X_train) // 1
+BATCH_SIZE = len(X_train) // 5
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv(num_filters=5, padding=1),
+    Conv(num_filters=20, padding=1),
     MaxPool(),
     Flatten(),
-    Dense(8, activation=ReLU()),
+    Dense(50, activation=ReLU()),
     Dense(2, activation=Softmax())
 ], CategoricalCrossEntropy())
 

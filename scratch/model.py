@@ -6,7 +6,6 @@ from tqdm import tqdm
 
 class Model:
     def __init__(self, layers: list, loss_function: Loss = CategoricalCrossEntropy()) -> None:
-
         self.layers = layers
         self.loss_function = loss_function
 
@@ -15,8 +14,6 @@ class Model:
         self.EPOCHS = None
         self.BATCH_SIZE = None
         self.STEP_SIZE = None
-
-
 
     def train(self, X: np.ndarray = None, y: np.ndarray = None, epochs: int = 1, batch_size: int = None,
               step_size: float = 1e-0):
@@ -35,7 +32,7 @@ class Model:
         print(f'batches: {n_batches}\nextra batch: {extra_batch}\n')
 
         for layer_idx in range(len(self.layers)):
-            self.layer_setup(self.layers[layer_idx], layer_idx, X.shape)
+            self.layer_setup(self.layers[layer_idx], layer_idx, X[0].shape)
 
         for i in tqdm(range(self.EPOCHS)):
             for j in range(n_batches + extra_batch):
@@ -68,12 +65,15 @@ class Model:
     def layer_setup(self, layer: Layer, layer_idx: int, input_shape: tuple):
         if layer.layer_type == LayerType.DENSE:
             if layer_idx == 0:
-                self.layers[layer_idx].setup(input_shape=input_shape, next_layer=self.layers[layer_idx + 1])
-            elif layer_idx == len(self.layers) - 1:
-                self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
+                self.layers[layer_idx].setup(input_shape=input_shape[0], next_layer=self.layers[layer_idx + 1])
             else:
-                self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape,
-                                             next_layer=self.layers[layer_idx + 1])
+                dense_input_shape = self.layers[layer_idx - 1].output_shape
+                if type(self.layers[layer_idx - 1].output_shape) == tuple:
+                    dense_input_shape = dense_input_shape[0]
+                if layer_idx == len(self.layers) - 1:
+                    self.layers[layer_idx].setup(input_shape=dense_input_shape)
+                else:
+                    self.layers[layer_idx].setup(input_shape=dense_input_shape, next_layer=self.layers[layer_idx + 1])
         elif layer.layer_type == LayerType.CONV:
             if layer_idx == 0:
                 self.layers[layer_idx].setup(input_shape=input_shape)
