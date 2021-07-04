@@ -6,7 +6,7 @@ from nnfs.datasets import spiral_data
 import matplotlib.pyplot as plt
 from scratch.loss import CategoricalCrossEntropy
 from scratch.layers.dense import Dense
-from scratch.activations import ReLU, Softmax
+from scratch.activations import ReLU, Softmax, LeakyReLU
 from scratch.model import Model
 
 np.seterr(all='raise')
@@ -35,14 +35,15 @@ X_train, X_test, y_train, y_test = train_test_split(X,
                                                     random_state=12)
 
 # ------------------------------------ HYPER PARAMETERS
-STEP_SIZE = 1e-0
-N_EPOCHS = 9000
+STEP_SIZE = 1e-1
+N_EPOCHS = 10000
 BATCH_SIZE = len(X_train) // 4
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
     Dense(100, activation=ReLU()),
-    Dense(10, activation=ReLU()),
+    Dense(50, activation=ReLU()),
+    Dense(20, activation=ReLU()),
     Dense(K, activation=Softmax())
 ], CategoricalCrossEntropy())
 # ------------------------------------ FIT THE MODEL
@@ -50,38 +51,7 @@ nn.train(X=X_train,
          y=y_train,
          epochs=N_EPOCHS,
          batch_size=BATCH_SIZE,
-         step_size=STEP_SIZE,
-         log=True)
+         step_size=STEP_SIZE)
 
 # ------------------------------------ EVALUTATE THE MODEL
 nn.evaluate(X_test=X_test, y_test=y_test)
-
-"""
-
-dense_layer = Dense(100, activation=ReLU())
-dense_layer2 = Dense(K, activation=Softmax())
-
-loss_function = CategoricalCrossEntropy()
-
-dense_layer.setup(input_shape=X_test.shape, next_layer=dense_layer2)
-dense_layer2.setup(input_shape=dense_layer.output_shape)
-
-for i in range(N_EPOCHS):
-    out = dense_layer.forward(X_train)
-    out = dense_layer2.forward(out)
-
-    loss, acc, d_score = loss_function.calculate(out, y_train)
-
-    # print loss
-    if i % 1000 == 0:
-        print_loss = "{:.2}".format(loss)
-        print_acc = "{:.2%}".format(acc)
-        print(f"iteration {i}: loss {print_loss} |  acc {print_acc}")
-
-    d_score = dense_layer2.backpropagation(d_score)
-    d_score = dense_layer.backpropagation(d_score)
-
-    dense_layer2.update()
-    dense_layer.update()
-    
-    """

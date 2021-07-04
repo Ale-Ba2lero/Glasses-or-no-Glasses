@@ -1,3 +1,5 @@
+import sys
+
 from scratch.activations import Activation, ReLU
 from scratch.layers.layer import Layer, LayerType
 import numpy as np
@@ -24,10 +26,10 @@ class Conv(Layer):
     def setup(self, input_shape: tuple):
         self.input_shape: tuple = input_shape
         self.output_shape: tuple = self.convolution_compatibility(input_shape)
-        channel_RGB = 3
+
         # We divide by 10 to reduce the variance of our initial values
         self.filters: np.ndarray = np.random.random_sample(
-            (self.kernel_size[0], self.kernel_size[1], channel_RGB, self.num_filters)) * 0.1
+            (self.kernel_size[0], self.kernel_size[1], self.input_shape[2], self.num_filters)) * 0.01
 
         # print(
         #    f"Conv layer\ninput: {self.input_shape}\nfilter: {self.filters.shape}\noutput: {self.output_shape}\n")
@@ -63,32 +65,34 @@ class Conv(Layer):
                 yield img_region, i, j
 
     def forward(self, inputs: np.ndarray) -> np.ndarray:
+        print("F CONV")
+        print(inputs.shape)
         self.batch_size: int = inputs.shape[0]
-
         if self.padding > 0:
             inputs = self.zero_padding(inputs, self.padding)
-
         self.last_input: np.ndarray = inputs
-
         output = np.zeros((self.batch_size,) + self.output_shape)
-
         volume_depth = output.shape[3]
 
         for img_region, i, j in self.iterate_regions(inputs):
             for d in range(volume_depth):
                 output[:, i, j, d] = np.sum(img_region * self.filters[:, :, :, d], axis=(1, 2, 3))
-
+        print(output.shape)
         return output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
+        print("BP CONV")
+        # TODO fix output shape
+        print(d_score.shape)
         d_filters = np.zeros(self.filters.shape)
 
         for img_region, i, j in self.iterate_regions(self.last_input):
             for b in range(d_score.shape[0]):
-                for f in range(self.num_filters):
+                for f in range(d_score.shape[3]):
                     d_filters[:, :, :, f] += d_score[b, i, j, f] * img_region[b]
 
         self.d_filters = d_filters
+        print(d_score.shape)
         return d_score
 
     def update(self, learn_rate: float = 1e-0) -> None:

@@ -28,7 +28,7 @@ directory = "./dataset/faces-spring-2020/faces-spring-2020/"
 train_ds = pd.read_csv(train_path)
 
 # for testing purposes we will select a subset of the whole dataset
-dataset_size = 50
+dataset_size = 100
 image_size = 32
 
 labels = train_ds.iloc[:dataset_size, -1].to_numpy()
@@ -50,16 +50,18 @@ X_train, X_test, y_train, y_test = train_test_split(data,
                                                     random_state=12)
 
 # ------------------------------------ HYPER PARAMETERS
-STEP_SIZE = 1e-0
+STEP_SIZE = 1e-1
 N_EPOCHS = 3
-BATCH_SIZE = len(X_train) // 5
+BATCH_SIZE = len(X_train) // 2
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv(num_filters=20, padding=1),
+    Conv(num_filters=5, padding=1),
+    MaxPool(),
+    Conv(num_filters=4, padding=0),
     MaxPool(),
     Flatten(),
-    Dense(50, activation=ReLU()),
+    Dense(20, activation=ReLU()),
     Dense(2, activation=Softmax())
 ], CategoricalCrossEntropy())
 

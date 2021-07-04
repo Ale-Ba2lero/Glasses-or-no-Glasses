@@ -1,12 +1,14 @@
 import numpy as np
 
+np.seterr(all='raise')
+
 
 class Activation:
 
     def compute(self, inputs: np.ndarray) -> np.ndarray:
         pass
 
-    def backpropagation(self, d_score: np.ndarray, layer: np.ndarray) -> np.ndarray:
+    def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
         pass
 
 
@@ -18,10 +20,23 @@ class ReLU(Activation):
         self.output: np.ndarray = np.maximum(0, inputs)
         return self.output
 
-    def backpropagation(self, d_score: np.ndarray, layer: np.ndarray) -> np.ndarray:
-        d_layer = np.dot(d_score, layer.T)
-        d_layer[self.output <= 0] = 0
-        return d_layer
+    def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
+        d_score[self.output <= 0] = 0
+        return d_score
+
+
+class LeakyReLU(Activation):
+    def __init__(self, param=1e-2):
+        self.param = param
+        self.output = None
+
+    def compute(self, inputs: np.ndarray) -> np.ndarray:
+        self.output: np.ndarray = np.where(inputs > 0, inputs, inputs * self.param)
+        return self.output
+
+    def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
+        d_score[self.output <= 0] = self.param
+        return d_score
 
 
 class Softmax(Activation):
