@@ -8,7 +8,7 @@ from PIL import Image
 from scratch.loss import CategoricalCrossEntropy
 from scratch.layers.conv import Conv
 from scratch.layers.dense import Dense
-from scratch.layers.maxpool import MaxPool
+from scratch.layers.maxpool2 import MaxPool2
 from scratch.layers.flatten import Flatten
 from scratch.activations import ReLU, Softmax
 from scratch.model import Model
@@ -29,7 +29,7 @@ train_ds = pd.read_csv(train_path)
 
 # for testing purposes we will select a subset of the whole dataset
 dataset_size = 100
-image_size = 32
+image_size = 64
 
 labels = train_ds.iloc[:dataset_size, -1].to_numpy()
 
@@ -51,17 +51,16 @@ X_train, X_test, y_train, y_test = train_test_split(data,
 
 # ------------------------------------ HYPER PARAMETERS
 STEP_SIZE = 1e-1
-N_EPOCHS = 3
-BATCH_SIZE = len(X_train) // 2
+N_EPOCHS = 1000
+BATCH_SIZE = len(X_train) // 1
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv(num_filters=5, padding=1),
-    MaxPool(),
-    Conv(num_filters=4, padding=0),
-    MaxPool(),
+    Conv(num_filters=20, padding=0),
+    Conv(num_filters=10, padding=0),
+    MaxPool2(),
     Flatten(),
-    Dense(20, activation=ReLU()),
+    Dense(50, activation=ReLU()),
     Dense(2, activation=Softmax())
 ], CategoricalCrossEntropy())
 
@@ -74,5 +73,4 @@ nn.train(X=X_train,
          step_size=STEP_SIZE)
 
 # ------------------------------------ EVALUTATE THE MODEL
-
 nn.evaluate(X_test=X_test, y_test=y_test)

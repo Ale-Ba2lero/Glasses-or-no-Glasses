@@ -35,7 +35,7 @@ class LeakyReLU(Activation):
         return self.output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
-        d_score[self.output <= 0] = self.param
+        d_score[self.output <= 0] = self.param * d_score[self.output]
         return d_score
 
 

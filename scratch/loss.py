@@ -41,5 +41,5 @@ class CategoricalCrossEntropy(Loss):
         num_examples = len(self.y_pred)
         d_score = self.y_pred
         d_score[range(num_examples), self.y_true] -= 1
-        d_score /= num_examples
+        d_score = np.divide(d_score, num_examples)
         return d_score

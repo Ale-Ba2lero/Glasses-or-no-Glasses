@@ -20,8 +20,8 @@ class Dense(Layer):
 
     def setup(self, input_shape: int, next_layer: Layer = None) -> None:
         self.input_shape = input_shape
-        # multiply by 0.1 to reduce the variance of our initial values
-        self.W: np.ndarray = 0.1 * np.random.randn(self.input_shape, self.num_neurons)
+        # / np.sqrt(self.input_shape) <- Xavier initialization
+        self.W: np.ndarray = np.random.randn(self.input_shape, self.num_neurons) / np.sqrt(self.input_shape)
         self.b: np.ndarray = np.zeros((1, self.num_neurons))
         self.next_layer: Layer = next_layer
         self.output_shape: int = self.num_neurons
@@ -40,7 +40,6 @@ class Dense(Layer):
         if self.next_layer is not None:
             d_score = self.activation.backpropagation(d_score)
         self.dW: np.ndarray = np.dot(self.input_layer.T, d_score)
-        # TODO check db computation
         self.db: np.ndarray = np.sum(d_score, axis=0, keepdims=True)
         d_score = np.dot(d_score, self.W.T)
         return d_score

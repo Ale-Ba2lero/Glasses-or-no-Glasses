@@ -24,12 +24,16 @@ class Conv(Layer):
         self.last_input = None
 
     def setup(self, input_shape: tuple):
+        if len(input_shape) == 4:
+            input_shape = input_shape[1:]
+
         self.input_shape: tuple = input_shape
         self.output_shape: tuple = self.convolution_compatibility(input_shape)
 
-        # We divide by 10 to reduce the variance of our initial values
+        # / np.sqrt(self.input_shape) <- Xavier initialization
         self.filters: np.ndarray = np.random.random_sample(
-            (self.kernel_size[0], self.kernel_size[1], self.input_shape[2], self.num_filters)) * 0.01
+            (self.kernel_size[0], self.kernel_size[1], self.input_shape[2], self.num_filters)) / np.sqrt(
+            self.kernel_size[0] * self.kernel_size[1] * self.input_shape[2])
 
         # print(
         #    f"Conv layer\ninput: {self.input_shape}\nfilter: {self.filters.shape}\noutput: {self.output_shape}\n")
@@ -65,8 +69,6 @@ class Conv(Layer):
                 yield img_region, i, j
 
     def forward(self, inputs: np.ndarray) -> np.ndarray:
-        print("F CONV")
-        print(inputs.shape)
         self.batch_size: int = inputs.shape[0]
         if self.padding > 0:
             inputs = self.zero_padding(inputs, self.padding)
@@ -74,26 +76,22 @@ class Conv(Layer):
         output = np.zeros((self.batch_size,) + self.output_shape)
         volume_depth = output.shape[3]
 
-        for img_region, i, j in self.iterate_regions(inputs):
-            for d in range(volume_depth):
+        for d in range(volume_depth):
+            for img_region, i, j in self.iterate_regions(inputs):
                 output[:, i, j, d] = np.sum(img_region * self.filters[:, :, :, d], axis=(1, 2, 3))
-        print(output.shape)
         return output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
-        print("BP CONV")
-        # TODO fix output shape
-        print(d_score.shape)
-        d_filters = np.zeros(self.filters.shape)
-
-        for img_region, i, j in self.iterate_regions(self.last_input):
-            for b in range(d_score.shape[0]):
-                for f in range(d_score.shape[3]):
-                    d_filters[:, :, :, f] += d_score[b, i, j, f] * img_region[b]
-
-        self.d_filters = d_filters
-        print(d_score.shape)
-        return d_score
+        self.d_filters = np.zeros(self.filters.shape)
+        new_d_score = np.zeros(self.last_input.shape)
+        # filters update
+        for b in range(self.batch_size):
+            for img_region, i, j in self.iterate_regions(self.last_input):
+                for f in range(self.num_filters):
+                    self.d_filters[:, :, :, f] += np.dot(d_score[b, i, j, f], img_region[b])
+                    new_d_score[b, i:i + self.kernel_size[0], j:j + self.kernel_size[1], :] += \
+                        self.filters[:, :, :, f] * d_score[b, i, j, f]
+        return new_d_score
 
     def update(self, learn_rate: float = 1e-0) -> None:
         self.filters = self.filters + (-learn_rate * self.d_filters)

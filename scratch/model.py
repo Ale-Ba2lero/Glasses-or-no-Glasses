@@ -33,13 +33,12 @@ class Model:
         for layer_idx in range(len(self.layers)):
             self.layer_setup(self.layers[layer_idx], layer_idx, X[0].shape)
 
-        for i in range(self.EPOCHS):
+        for i in tqdm(range(self.EPOCHS)):
             for j in range(n_batches + extra_batch):
 
                 X_batch = X[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
                 y_batch = y[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
 
-                # forward step
                 output = X_batch
                 for layer in self.layers:
                     output = layer.forward(output)
@@ -53,10 +52,10 @@ class Model:
                     print_acc = "{:.2%}".format(acc)
                     print(f"\niteration {i}: loss {print_loss} |  acc {print_acc}")
 
-                # backward step
                 for layer in reversed(self.layers):
                     d_score = layer.backpropagation(d_score=d_score)
 
+                # layer update
                 for layer in self.layers:
                     if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
                         layer.update(step_size)
@@ -81,7 +80,8 @@ class Model:
         elif layer.layer_type == LayerType.MAXPOOL:
             self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
         elif layer.layer_type == LayerType.FLATTEN:
-            self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape, next_layer=self.layers[layer_idx + 1])
+            self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape,
+                                         next_layer=self.layers[layer_idx + 1])
 
     def summary(self):
         # TODO
