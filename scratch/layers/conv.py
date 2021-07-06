@@ -26,20 +26,26 @@ class Conv(Layer):
     def setup(self, input_shape: tuple):
         if len(input_shape) == 4:
             input_shape = input_shape[1:]
-
         self.input_shape: tuple = input_shape
         self.output_shape: tuple = self.convolution_compatibility(input_shape)
 
         # / np.sqrt(self.input_shape) <- Xavier initialization
-        self.filters: np.ndarray = np.random.random_sample(
-            (self.kernel_size[0], self.kernel_size[1], self.input_shape[2], self.num_filters)) / np.sqrt(
-            self.kernel_size[0] * self.kernel_size[1] * self.input_shape[2])
-
-        # print(
-        #    f"Conv layer\ninput: {self.input_shape}\nfilter: {self.filters.shape}\noutput: {self.output_shape}\n")
+        if len(input_shape) == 2:
+            self.filters: np.ndarray = np.random.random_sample(
+                (self.kernel_size[0], self.kernel_size[1], self.num_filters)) / np.sqrt(
+                self.kernel_size[0] * self.kernel_size[1])
+        elif len(input_shape) == 3:
+            self.filters: np.ndarray = np.random.random_sample(
+                (self.kernel_size[0], self.kernel_size[1], self.input_shape[2], self.num_filters)) / np.sqrt(
+                self.kernel_size[0] * self.kernel_size[1] * self.input_shape[2])
 
     def convolution_compatibility(self, input_shape: tuple) -> (int, int, int):
-        h, w, _ = input_shape
+        h, w = 0, 0
+        if len(input_shape) == 2:
+            h, w = input_shape
+        elif len(input_shape) == 3:
+            h, w, _ = input_shape
+
         f_h, f_w = self.kernel_size
         s = self.stride
         p = self.padding
@@ -52,45 +58,90 @@ class Conv(Layer):
 
         return int(output_layer_h), int(output_layer_w), self.num_filters
 
-    def zero_padding(self, inputs: np.ndarray, padding: int = 1) -> np.ndarray:
-        _, h, w, d = inputs.shape
-        canvas = np.zeros((self.batch_size, h + padding * 2, w + padding * 2, d))
-        canvas[:, padding:h + padding, padding:w + padding] = inputs
+    @staticmethod
+    def zero_padding(inputs: np.ndarray, padding: int = 1) -> np.ndarray:
+        canvas = None
+        if len(inputs.shape) == 2:
+            h, w = inputs.shape
+            canvas = np.zeros((h + padding * 2, w + padding * 2))
+            canvas[padding:h + padding, padding:w + padding] = inputs
+        elif len(inputs.shape) == 3:
+            b, h, w = inputs.shape
+            canvas = np.zeros((b, h + padding * 2, w + padding * 2))
+            canvas[:, padding:h + padding, padding:w + padding] = inputs
+        elif len(inputs.shape) == 4:
+            b, h, w, d = inputs.shape
+            canvas = np.zeros((b, h + padding * 2, w + padding * 2, d))
+            canvas[:, padding:h + padding, padding:w + padding] = inputs
         return canvas
 
-    def iterate_regions(self, inputs: np.ndarray) -> (np.ndarray, int, int):
-        _, h, w, num_filters = inputs.shape
-        h_limit = h - self.kernel_size[0] + 1
-        w_limit = w - self.kernel_size[1] + 1
+    @staticmethod
+    def iterate_regions(inputs: np.ndarray, kernel: (int, int) = (3, 3), stride: int = 1) -> (
+            np.ndarray, int, int):
+        h, w = None, None
 
-        for i in range(0, h_limit, self.stride):
-            for j in range(0, w_limit, self.stride):
-                img_region = inputs[:, i:(i + self.kernel_size[0]), j:(j + self.kernel_size[1]), :]
+        if len(inputs.shape) == 2:
+            h, w = inputs.shape
+        elif len(inputs.shape) == 3:
+            _, h, w = inputs.shape
+        elif len(inputs.shape) == 4:
+            _, h, w, _ = inputs.shape
+
+        h_limit = h - kernel[0] + 1
+        w_limit = w - kernel[1] + 1
+        img_region = None
+        for i in range(0, h_limit, stride):
+            for j in range(0, w_limit, stride):
+                if len(inputs.shape) == 2:
+                    img_region = inputs[i:(i + kernel[0]), j:(j + kernel[1])]
+                elif len(inputs.shape) == 3:
+                    img_region = inputs[:, i:(i + kernel[0]), j:(j + kernel[1])]
+                elif len(inputs.shape) == 4:
+                    img_region = inputs[:, i:(i + kernel[0]), j:(j + kernel[1]), :]
                 yield img_region, i, j
 
     def forward(self, inputs: np.ndarray) -> np.ndarray:
-        self.batch_size: int = inputs.shape[0]
         if self.padding > 0:
             inputs = self.zero_padding(inputs, self.padding)
         self.last_input: np.ndarray = inputs
-        output = np.zeros((self.batch_size,) + self.output_shape)
-        volume_depth = output.shape[3]
 
-        for d in range(volume_depth):
-            for img_region, i, j in self.iterate_regions(inputs):
-                output[:, i, j, d] = np.sum(img_region * self.filters[:, :, :, d], axis=(1, 2, 3))
+        batch_size: int = inputs.shape[0]
+        output = np.zeros((batch_size,) + self.output_shape)
+
+        if len(inputs.shape) == 3:
+            for img_region, i, j in self.iterate_regions(inputs, kernel=self.kernel_size, stride=self.stride):
+                for f in range(self.num_filters):
+                    output[:, i, j, f] = np.sum(img_region * self.filters[:, :, f], axis=(1, 2))
+        elif len(inputs.shape) == 4:
+            volume_depth = output.shape[-1]
+            for d in range(volume_depth):
+                for img_region, i, j in self.iterate_regions(inputs, kernel=self.kernel_size, stride=self.stride):
+                    output[:, i, j, d] = np.sum(img_region * self.filters[:, :, :, d], axis=(1, 2, 3))
+
         return output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
+        # TODO: improve performances here
+
         self.d_filters = np.zeros(self.filters.shape)
         new_d_score = np.zeros(self.last_input.shape)
+        batch_size = d_score.shape[0]
+
         # filters update
-        for b in range(self.batch_size):
-            for img_region, i, j in self.iterate_regions(self.last_input):
-                for f in range(self.num_filters):
-                    self.d_filters[:, :, :, f] += np.dot(d_score[b, i, j, f], img_region[b])
-                    new_d_score[b, i:i + self.kernel_size[0], j:j + self.kernel_size[1], :] += \
-                        self.filters[:, :, :, f] * d_score[b, i, j, f]
+        if len(self.input_shape) == 2:
+            for b in range(batch_size):
+                for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size,stride=self.stride):
+                    for f in range(self.num_filters):
+                        self.d_filters[:, :, f] += np.dot(d_score[b, i, j, f], img_region[b])
+                        new_d_score[b, i:i + self.kernel_size[0], j:j + self.kernel_size[1]] += self.filters[:, :, f] * d_score[b, i, j, f]
+
+        elif len(self.input_shape) == 3:
+            for b in range(batch_size):
+                for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size,stride=self.stride):
+                    for f in range(self.num_filters):
+                        self.d_filters[:, :, :, f] += np.dot(d_score[b, i, j, f], img_region[b])
+                        new_d_score[b, i:i + self.kernel_size[0], j:j + self.kernel_size[1], :] += self.filters[:, :, :, f] * d_score[b, i, j, f]
+
         return new_d_score
 
     def update(self, learn_rate: float = 1e-0) -> None:

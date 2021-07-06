@@ -42,7 +42,6 @@ for x in tqdm(range(dataset_size)):
     img = (img - np.min(img)) / np.ptp(img)
     data[x] = img
 
-
 # %%
 X_train, X_test, y_train, y_test = train_test_split(data,
                                                     labels,
@@ -56,11 +55,11 @@ BATCH_SIZE = len(X_train) // 1
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv(num_filters=20, padding=0),
     Conv(num_filters=10, padding=0),
+    Conv(num_filters=5, padding=0),
     MaxPool2(),
     Flatten(),
-    Dense(50, activation=ReLU()),
+    Dense(20, activation=ReLU()),
     Dense(2, activation=Softmax())
 ], CategoricalCrossEntropy())
 

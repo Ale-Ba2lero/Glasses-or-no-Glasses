@@ -47,7 +47,7 @@ class Model:
                 loss, acc, d_score = self.loss_function.calculate(output, y_batch)
 
                 # print loss
-                if i % 1000 == 0 and j == 0:
+                if i % self.EPOCHS == 0 and j == 0:
                     print_loss = "{:.2}".format(loss)
                     print_acc = "{:.2%}".format(acc)
                     print(f"\niteration {i}: loss {print_loss} |  acc {print_acc}")
@@ -80,8 +80,7 @@ class Model:
         elif layer.layer_type == LayerType.MAXPOOL:
             self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
         elif layer.layer_type == LayerType.FLATTEN:
-            self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape,
-                                         next_layer=self.layers[layer_idx + 1])
+            self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
 
     def summary(self):
         # TODO

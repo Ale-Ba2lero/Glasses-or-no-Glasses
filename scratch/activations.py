@@ -26,16 +26,16 @@ class ReLU(Activation):
 
 
 class LeakyReLU(Activation):
-    def __init__(self, param=1e-2):
-        self.param = param
+    def __init__(self, alpha=1e-2):
+        self.alpha = alpha
         self.output = None
 
     def compute(self, inputs: np.ndarray) -> np.ndarray:
-        self.output: np.ndarray = np.where(inputs > 0, inputs, inputs * self.param)
+        self.output: np.ndarray = np.where(inputs > 0, inputs, inputs * self.alpha)
         return self.output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
-        d_score[self.output <= 0] = self.param * d_score[self.output]
+        d_score[self.output <= 0] = self.alpha
         return d_score
 
 

@@ -1,4 +1,5 @@
-# %%
+from sklearn.model_selection import train_test_split
+
 from scratch.layers.conv import Conv
 from scratch.layers.dense import Dense
 from scratch.layers.maxpool2 import MaxPool2
@@ -10,60 +11,62 @@ import pandas as pd
 from tqdm import tqdm
 from PIL import Image
 import matplotlib.pyplot as plt
+from scratch.model import Model
+
+import idx2numpy
+
+train_images_file = 'examples/cnn/dataset/train-images.idx3-ubyte'
+train_labels_file = 'examples/cnn/dataset/train-labels.idx1-ubyte'
+test_images_file = 'examples/cnn/dataset/t10k-images.idx3-ubyte'
+test_labels_file = 'examples/cnn/dataset/t10k-labels.idx1-ubyte'
+
+train_images = idx2numpy.convert_from_file(train_images_file)
+train_labels = idx2numpy.convert_from_file(train_labels_file)
+test_images = idx2numpy.convert_from_file(test_images_file)
+test_labels = idx2numpy.convert_from_file(test_labels_file)
+
+DATASET_SIZE = 500
+TRAINING_SET_SIZE = 100
+
+train_images = train_images[:DATASET_SIZE]
+train_labels = train_labels[:DATASET_SIZE]
+test_images = test_images[:TRAINING_SET_SIZE]
+test_labels = test_labels[:TRAINING_SET_SIZE]
+
+print('Min: %.3f, Max: %.3f' % (train_images.min(), train_images.max()))
+train_images = train_images.astype('float32')
+train_images /= 255.0
+print('Min: %.3f, Max: %.3f' % (train_images.min(), train_images.max()))
 
 
-# %%
-train_path = "./dataset/train.csv"
-directory = "./dataset/faces-spring-2020/faces-spring-2020/"
-train_ds = pd.read_csv(train_path)
+X_train, X_test, y_train, y_test = train_test_split(train_images,
+                                                    train_labels,
+                                                    test_size=0.20,
+                                                    random_state=12)
+STEP_SIZE = 1e-1
+N_EPOCHS = 5
+BATCH_SIZE = len(X_train) // 1
 
-# for testing purposes we will select a subset of the whole dataset
-dataset_size = 2
-image_size = 128
+# ------------------------------------ BUILD THE MODEL
+nn = Model([
+    Conv(num_filters=8, padding=1),
+    MaxPool2(),
+    Flatten(),
+    Dense(10, activation=Softmax())
+], CategoricalCrossEntropy())
 
-labels = train_ds.iloc[:dataset_size, -1].to_numpy()
+print("Model train")
+# ------------------------------------ FIT THE MODEL
+nn.train(X=X_train,
+         y=y_train,
+         epochs=N_EPOCHS,
+         batch_size=BATCH_SIZE,
+         step_size=STEP_SIZE)
 
-# %%
-data = np.zeros((dataset_size, image_size, image_size, 3))
-for x in tqdm(range(dataset_size)):
-    img_path = f'{directory}face-{x + 1}.png'
-    img = Image.open(img_path)
-    img = img.resize((image_size, image_size), Image.ANTIALIAS)  # scale the images
-    img = np.array(img)
-    img = (img - np.min(img)) / np.ptp(img)
-    data[x] = img
-
-conv_l = Conv(num_filters=4, kernel_size=(3, 3), padding=1, stride=1)
-pool_l = MaxPool2()
-
-loss_function = CategoricalCrossEntropy()
-
-conv_l.setup(input_shape=data.shape)
-pool_l.setup(input_shape=conv_l.output_shape)
-
-convimg = conv_l.forward(data)
-plt.imshow(convimg[0])
-plt.show()
-poolimg = pool_l.forward(convimg)
-plt.imshow(poolimg[0])
-plt.show()
-
-"""for i in range(100):
-    out = conv_l.forward(data)
-    out = pool_l.forward(out)
-
-    loss, acc, dscore = loss_function.calculate(out, labels)
-
-    print_loss = "{:.2}".format(loss)
-    print_acc = "{:.2%}".format(acc)
-    print(f"loss:{print_loss} | acc:{print_acc}\n")
-
-    dscore = pool_l.backpropagation(dscore)
-    conv_l.backpropagation(dscore)
-
-    conv_l.update()"""
-
+# ------------------------------------ EVALUTATE THE MODEL
+nn.evaluate(X_test=X_test, y_test=y_test)
 """
 plt.imshow(data[0])
 plt.show()
 """
+

@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import minmax_scale
 
 import nnfs
 from nnfs.datasets import spiral_data
@@ -19,11 +20,16 @@ Mini-Batch Gradient Descent. 1 < Batch Size < Size of Training Set
 '''
 
 # ------------------------------------ DATASET
-N = 100  # number of points per class
+N = 200  # number of points per class
 D = 2  # dimensionality
 K = 3  # number of classes
 
 X, y = spiral_data(samples=N, classes=K)
+
+print("Scale values to [0;1]")
+print('Min: %.3f, Max: %.3f' % (X.min(), X.max()))
+X = minmax_scale(X, feature_range=(0, 1))
+print('Min: %.3f, Max: %.3f' % (X.min(), X.max()))
 
 # plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.Spectral)
 # plt.show()
@@ -37,7 +43,7 @@ X_train, X_test, y_train, y_test = train_test_split(X,
 # ------------------------------------ HYPER PARAMETERS
 STEP_SIZE = 1e-1
 N_EPOCHS = 10000
-BATCH_SIZE = len(X_train) // 3
+BATCH_SIZE = len(X_train) // 5
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([

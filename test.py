@@ -75,3 +75,7 @@ data = [[[[1, 2, 3], [4, 5, 6]],
 data = np.array(data)
 
 print(np.amax(data, axis=(1, 2)))
+
+# %%
+z = [2,3,-2,4,1,-2]
+print(np.greater(z, 0).astype(int))

@@ -19,9 +19,9 @@ class Dense(Layer):
         self.input_layer = None
 
     def setup(self, input_shape: int, next_layer: Layer = None) -> None:
-        self.input_shape = input_shape
+
         # / np.sqrt(self.input_shape) <- Xavier initialization
-        self.W: np.ndarray = np.random.randn(self.input_shape, self.num_neurons) / np.sqrt(self.input_shape)
+        self.W: np.ndarray = np.random.randn(input_shape, self.num_neurons) / np.sqrt(input_shape)
         self.b: np.ndarray = np.zeros((1, self.num_neurons))
         self.next_layer: Layer = next_layer
         self.output_shape: int = self.num_neurons
