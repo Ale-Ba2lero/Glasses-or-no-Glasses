@@ -1,5 +1,4 @@
 import numpy as np
-
 np.seterr(all='raise')
 
 
@@ -42,9 +41,13 @@ class LeakyReLU(Activation):
 class Softmax(Activation):
     def compute(self, inputs: np.ndarray) -> np.ndarray:
         # subtract the max (prevent overflow)
-        exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
-        probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
-        return probabilities
+        # exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
+        # probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
+        # return probabilities
+        log = np.log(np.sum(np.exp(inputs), axis=1))
+        sub = np.subtract(inputs.T, log).T
+        exp = np.exp(sub)
+        return exp
 
     def backpropagation(self, d_score=None, layer=None) -> None:
         # in this implementation the Categorical Cross Entropy Loss function

@@ -4,7 +4,7 @@ from scratch.activations import Activation, ReLU
 from scratch.layers.layer import Layer, LayerType
 import numpy as np
 from tqdm import tqdm
-
+import time
 
 class Conv(Layer):
 
@@ -127,7 +127,7 @@ class Conv(Layer):
         new_d_score = np.zeros(self.last_input.shape)
         batch_size = d_score.shape[0]
 
-        # filters update
+        # filters delta
         if len(self.input_shape) == 2:
             for b in range(batch_size):
                 for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size,stride=self.stride):
@@ -138,6 +138,7 @@ class Conv(Layer):
         elif len(self.input_shape) == 3:
             for b in range(batch_size):
                 for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size,stride=self.stride):
+
                     for f in range(self.num_filters):
                         self.d_filters[:, :, :, f] += np.dot(d_score[b, i, j, f], img_region[b])
                         new_d_score[b, i:i + self.kernel_size[0], j:j + self.kernel_size[1], :] += self.filters[:, :, :, f] * d_score[b, i, j, f]

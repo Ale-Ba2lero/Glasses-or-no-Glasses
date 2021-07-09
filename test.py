@@ -77,5 +77,45 @@ data = np.array(data)
 print(np.amax(data, axis=(1, 2)))
 
 # %%
-z = [2,3,-2,4,1,-2]
+z = [2, 3, -2, 4, 1, -2]
 print(np.greater(z, 0).astype(int))
+
+# %%
+
+a = [[1, 2, 3, 4, 5],
+     [6, 7, 8, 9, 10],
+     [11, 12, 13, 14, 15],
+     [16, 17, 18, 19, 20],
+     [21, 22, 23, 24, 25]]
+
+a = np.array(a)
+
+print(a[1:1 + 3, 1:1 + 3])
+
+
+# %%
+
+def compute2(inputs: np.ndarray) -> np.ndarray:
+    log = np.log(np.sum(np.exp(inputs), axis=1))
+    sub = np.subtract(inputs.T, log).T
+    exp = np.exp(sub)
+    return exp
+
+
+def compute1(inputs: np.ndarray) -> np.ndarray:
+    # subtract the max (prevent overflow)
+    exp_values = np.exp(inputs - np.max(inputs, axis=1, keepdims=True))
+    probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)
+    # probabilities = np.exp(inputs - np.log(np.sum(inputs, axis=1)))
+    return probabilities
+
+
+inp = [[0.6, 0.4, 0.6],
+       [0.4, 0.1, 0.6],
+       [0.3, 0.2, 0.2],
+       [0.9, 0.7, 0.8]]
+
+inp = np.array(inp)
+
+print(compute1(inp))
+print(compute2(inp))

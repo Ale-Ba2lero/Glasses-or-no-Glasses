@@ -28,7 +28,7 @@ X, y = spiral_data(samples=N, classes=K)
 
 print("Scale values to [0;1]")
 print('Min: %.3f, Max: %.3f' % (X.min(), X.max()))
-X = minmax_scale(X, feature_range=(0, 1))
+X = minmax_scale(X, feature_range=(-0.5, 0.5))
 print('Min: %.3f, Max: %.3f' % (X.min(), X.max()))
 
 # plt.scatter(X[:, 0], X[:, 1], c=y, s=40, cmap=plt.cm.Spectral)
@@ -43,7 +43,7 @@ X_train, X_test, y_train, y_test = train_test_split(X,
 # ------------------------------------ HYPER PARAMETERS
 STEP_SIZE = 1e-1
 N_EPOCHS = 10000
-BATCH_SIZE = len(X_train) // 5
+BATCH_SIZE = len(X_train) // 10
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
