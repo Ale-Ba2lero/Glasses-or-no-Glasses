@@ -1,17 +1,18 @@
 from sklearn.model_selection import train_test_split
 
-from scratch.layers.conv import Conv
-from scratch.layers.dense import Dense
-from scratch.layers.maxpool2 import MaxPool2
-from scratch.layers.flatten import Flatten
-from scratch.activations import ReLU, Softmax
-from scratch.loss import CategoricalCrossEntropy
+from model.layers.conv import Conv
+from model.layers.dense import Dense
+from model.layers.maxpool2 import MaxPool2
+from model.layers.flatten import Flatten
+from model.layers.ReLU import ReLU
+from model.layers.softmax import Softmax
+from model.loss import CategoricalCrossEntropy
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from PIL import Image
 import matplotlib.pyplot as plt
-from scratch.model import Model
+from model.model import Model
 
 import idx2numpy
 
@@ -25,7 +26,7 @@ train_labels = idx2numpy.convert_from_file(train_labels_file)
 test_images = idx2numpy.convert_from_file(test_images_file)
 test_labels = idx2numpy.convert_from_file(test_labels_file)
 
-DATASET_SIZE = 1000
+DATASET_SIZE = 100
 TRAINING_SET_SIZE = 100
 
 train_images = train_images[:DATASET_SIZE]
@@ -45,14 +46,14 @@ X_train, X_test, y_train, y_test = train_test_split(train_images,
                                                     random_state=69)
 STEP_SIZE = 1e-1
 N_EPOCHS = 3
-BATCH_SIZE = len(X_train) // 10
+BATCH_SIZE = len(X_train) // 1
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv(num_filters=8, padding=1),
+    Conv(num_filters=10, padding=1), ReLU(),
     MaxPool2(),
     Flatten(),
-    Dense(10, activation=Softmax())
+    Dense(10), Softmax()
 ], CategoricalCrossEntropy())
 
 print("Model train")
@@ -61,7 +62,8 @@ nn.train(X=X_train,
          y=y_train,
          epochs=N_EPOCHS,
          batch_size=BATCH_SIZE,
-         step_size=STEP_SIZE)
+         step_size=STEP_SIZE,
+         log_freq=1)
 
 # ------------------------------------ EVALUTATE THE MODEL
 nn.evaluate(X_test=X_test, y_test=y_test)

@@ -1,6 +1,6 @@
 import sys
 
-from scratch.layers.layer import Layer, LayerType
+from model.layers.layer import Layer, LayerType
 import numpy as np
 
 

@@ -1,6 +1,6 @@
-from scratch.loss import CategoricalCrossEntropy, Loss
+from model.loss import CategoricalCrossEntropy, Loss
 import numpy as np
-from scratch.layers.layer import Layer, LayerType
+from model.layers.layer import Layer, LayerType
 from tqdm import tqdm
 
 
@@ -16,7 +16,7 @@ class Model:
         self.STEP_SIZE = None
 
     def train(self, X: np.ndarray = None, y: np.ndarray = None, epochs: int = 1, batch_size: int = None,
-              step_size: float = 1e-0):
+              step_size: float = 1e-0, log_freq=1000):
         self.X = X
         self.y = y
         self.EPOCHS = epochs
@@ -47,7 +47,7 @@ class Model:
                 loss, acc, d_score = self.loss_function.calculate(output, y_batch)
 
                 # print loss
-                if i % self.EPOCHS == 1000 and j == 0:
+                if i % log_freq == 0 and j == 0:
                     print_loss = "{:.2}".format(loss)
                     print_acc = "{:.2%}".format(acc)
                     print(f"\niteration {i}: loss {print_loss} |  acc {print_acc}")
@@ -72,14 +72,13 @@ class Model:
                     self.layers[layer_idx].setup(input_shape=dense_input_shape)
                 else:
                     self.layers[layer_idx].setup(input_shape=dense_input_shape, next_layer=self.layers[layer_idx + 1])
-        elif layer.layer_type == LayerType.CONV:
-            if layer_idx == 0:
-                self.layers[layer_idx].setup(input_shape=input_shape)
-            else:
-                self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
-        elif layer.layer_type == LayerType.MAXPOOL:
-            self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
-        elif layer.layer_type == LayerType.FLATTEN:
+        elif layer.layer_type == LayerType.CONV and layer_idx == 0:
+            self.layers[layer_idx].setup(input_shape=input_shape)
+        elif layer.layer_type == LayerType.MAXPOOL or \
+                layer.layer_type == LayerType.FLATTEN or \
+                layer.layer_type == LayerType.RELU or \
+                layer.layer_type == LayerType.SOFTMAX or \
+                (layer.layer_type == LayerType.CONV and layer_idx != 0):
             self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
 
     def summary(self):

@@ -8,6 +8,8 @@ class LayerType(Enum):
     CONV = auto()
     MAXPOOL = auto()
     FLATTEN = auto()
+    RELU = auto()
+    SOFTMAX = auto()
 
 
 class Layer(abc.ABC):

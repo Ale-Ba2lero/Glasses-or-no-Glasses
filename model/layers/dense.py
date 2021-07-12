@@ -1,10 +1,10 @@
-from scratch.activations import Activation, ReLU
-from scratch.layers.layer import Layer, LayerType
+from model.activations import Activation, ReLU
+from model.layers.layer import Layer, LayerType
 import numpy as np
 
 
 class Dense(Layer):
-    def __init__(self, num_neurons, activation=ReLU()) -> None:
+    def __init__(self, num_neurons, activation=None) -> None:
         super().__init__()
         self.num_neurons: int = num_neurons
         self.activation: Activation = activation
@@ -19,26 +19,19 @@ class Dense(Layer):
         self.input_layer = None
 
     def setup(self, input_shape: int, next_layer: Layer = None) -> None:
-
         # / np.sqrt(self.input_shape) <- Xavier initialization
         self.W: np.ndarray = np.random.randn(input_shape, self.num_neurons) / np.sqrt(input_shape)
         self.b: np.ndarray = np.zeros((1, self.num_neurons))
         self.next_layer: Layer = next_layer
         self.output_shape: int = self.num_neurons
 
-        # print(
-        #    f"Dense layer {self.num_neurons} neurons\ninput size: {input_shape}\nLayer shape: {self.W.shape}\nOutput "
-        #    f"size: {self.output_shape}\n")
-
     def forward(self, input_layer) -> np.ndarray:
+        self.batch_size = input_layer.shape[0]
         self.input_layer: np.ndarray = input_layer
         output = np.dot(input_layer, self.W) + self.b
-        output = self.activation.compute(output)
         return output
 
     def backpropagation(self, d_score) -> np.ndarray:
-        if self.next_layer is not None:
-            d_score = self.activation.backpropagation(d_score)
         self.dW: np.ndarray = np.dot(self.input_layer.T, d_score)
         self.db: np.ndarray = np.sum(d_score, axis=0, keepdims=True)
         d_score = np.dot(d_score, self.W.T)

@@ -1,4 +1,4 @@
-from scratch.layers.layer import Layer, LayerType
+from model.layers.layer import Layer, LayerType
 import numpy as np
 
 
@@ -12,7 +12,6 @@ class Flatten(Layer):
         self.input_shape: tuple = input_shape
         h, w, d = input_shape
         self.output_shape: int = h * w * d
-        # print(f"Flatten layer\ninput shape: {self.input_shape}\noutput shape: {self.output_shape}\n")
 
     def forward(self, inputs: np.ndarray) -> np.ndarray:
         self.batch_size = inputs.shape[0]

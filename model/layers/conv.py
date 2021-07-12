@@ -1,10 +1,11 @@
 import sys
 
-from scratch.activations import Activation, ReLU
-from scratch.layers.layer import Layer, LayerType
+from model.activations import Activation, ReLU
+from model.layers.layer import Layer, LayerType
 import numpy as np
 from tqdm import tqdm
 import time
+
 
 class Conv(Layer):
 
@@ -20,6 +21,7 @@ class Conv(Layer):
 
         # TODO add bias?
         self.filters = None
+        self.b = None
         self.d_filters = None
         self.last_input = None
 
@@ -38,6 +40,8 @@ class Conv(Layer):
             self.filters: np.ndarray = np.random.random_sample(
                 (self.kernel_size[0], self.kernel_size[1], self.input_shape[2], self.num_filters)) / np.sqrt(
                 self.kernel_size[0] * self.kernel_size[1] * self.input_shape[2])
+
+        self.b: np.ndarray = np.zeros((1, self.num_filters))
 
     def convolution_compatibility(self, input_shape: tuple) -> (int, int, int):
         h, w = 0, 0
@@ -111,12 +115,14 @@ class Conv(Layer):
         if len(inputs.shape) == 3:
             for img_region, i, j in self.iterate_regions(inputs, kernel=self.kernel_size, stride=self.stride):
                 for f in range(self.num_filters):
-                    output[:, i, j, f] = np.sum(img_region * self.filters[:, :, f], axis=(1, 2))
+                    output[:, i, j, f] = np.sum(np.multiply(img_region, self.filters[:, :, f]))
+                    # output[:, i, j, f] = np.sum(img_region * self.filters[:, :, f], axis=(1, 2))
         elif len(inputs.shape) == 4:
-            volume_depth = output.shape[-1]
-            for d in range(volume_depth):
+            #volume_depth = output.shape[-1]
+            for f in range(self.num_filters):
                 for img_region, i, j in self.iterate_regions(inputs, kernel=self.kernel_size, stride=self.stride):
-                    output[:, i, j, d] = np.sum(img_region * self.filters[:, :, :, d], axis=(1, 2, 3))
+                    output[:, i, j, f] = np.sum(np.multiply(img_region, self.filters[:, :, :, f]))
+                    # output[:, i, j, d] = np.sum(img_region * self.filters[:, :, :, d], axis=(1, 2, 3))
 
         return output
 
@@ -130,18 +136,22 @@ class Conv(Layer):
         # filters delta
         if len(self.input_shape) == 2:
             for b in range(batch_size):
-                for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size,stride=self.stride):
+                for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size,
+                                                             stride=self.stride):
                     for f in range(self.num_filters):
                         self.d_filters[:, :, f] += np.dot(d_score[b, i, j, f], img_region[b])
-                        new_d_score[b, i:i + self.kernel_size[0], j:j + self.kernel_size[1]] += self.filters[:, :, f] * d_score[b, i, j, f]
+                        new_d_score[b, i:i + self.kernel_size[0], j:j + self.kernel_size[1]] += self.filters[:, :, f] * \
+                                                                                                d_score[b, i, j, f]
 
         elif len(self.input_shape) == 3:
             for b in range(batch_size):
-                for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size,stride=self.stride):
-
+                for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size,
+                                                             stride=self.stride):
                     for f in range(self.num_filters):
                         self.d_filters[:, :, :, f] += np.dot(d_score[b, i, j, f], img_region[b])
-                        new_d_score[b, i:i + self.kernel_size[0], j:j + self.kernel_size[1], :] += self.filters[:, :, :, f] * d_score[b, i, j, f]
+                        new_d_score[b, i:i + self.kernel_size[0], j:j + self.kernel_size[1], :] += self.filters[:, :, :,
+                                                                                                   f] * d_score[
+                                                                                                       b, i, j, f]
 
         return new_d_score
 

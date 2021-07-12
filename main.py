@@ -5,13 +5,15 @@ import pandas as pd
 from tqdm import tqdm
 from PIL import Image
 
-from scratch.loss import CategoricalCrossEntropy
-from scratch.layers.conv import Conv
-from scratch.layers.dense import Dense
-from scratch.layers.maxpool2 import MaxPool2
-from scratch.layers.flatten import Flatten
-from scratch.activations import ReLU, Softmax
-from scratch.model import Model
+from model.loss import CategoricalCrossEntropy
+from model.layers.conv import Conv
+from model.layers.dense import Dense
+from model.layers.maxpool2 import MaxPool2
+from model.layers.flatten import Flatten
+from model.layers.ReLU import ReLU
+from model.layers.softmax import Softmax
+from model.model import Model
+import matplotlib.pyplot as plt
 
 '''
 Batch Gradient Descent. Batch Size = Size of Training Set
@@ -28,7 +30,7 @@ directory = "./dataset/faces-spring-2020/faces-spring-2020/"
 train_ds = pd.read_csv(train_path)
 
 # for testing purposes we will select a subset of the whole dataset
-dataset_size = 100
+dataset_size = 15
 image_size = 64
 
 labels = train_ds.iloc[:dataset_size, -1].to_numpy()
@@ -42,24 +44,26 @@ for x in tqdm(range(dataset_size)):
     img = (img - np.min(img)) / np.ptp(img)
     data[x] = img
 
+"""plt.imshow(data[0])
+plt.show()"""
 # %%
 X_train, X_test, y_train, y_test = train_test_split(data,
                                                     labels,
-                                                    test_size=0.20,
+                                                    test_size=0.1,
                                                     random_state=12)
 
 # ------------------------------------ HYPER PARAMETERS
 STEP_SIZE = 1e-1
-N_EPOCHS = 1000
+N_EPOCHS = 100
 BATCH_SIZE = len(X_train) // 1
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv(num_filters=10, padding=0),
+    Conv(num_filters=10, padding=1), ReLU(),
     MaxPool2(),
     Flatten(),
-    Dense(10, activation=ReLU()),
-    Dense(2, activation=Softmax())
+    Dense(10), ReLU(),
+    Dense(2), Softmax()
 ], CategoricalCrossEntropy())
 
 print("Model train")
@@ -68,7 +72,7 @@ nn.train(X=X_train,
          y=y_train,
          epochs=N_EPOCHS,
          batch_size=BATCH_SIZE,
-         step_size=STEP_SIZE)
+         step_size=STEP_SIZE, log_freq=1)
 
 # ------------------------------------ EVALUTATE THE MODEL
 nn.evaluate(X_test=X_test, y_test=y_test)
