@@ -9,11 +9,9 @@ class Softmax(Layer):
     def __init__(self):
         super().__init__()
         self.layer_type = LayerType.SOFTMAX
-        self.output = None
 
     def setup(self, input_shape: tuple) -> None:
-        self.input_shape = input_shape
-        self.output_shape = input_shape
+        pass
 
     def forward(self, inputs: np.ndarray) -> np.ndarray:
         # subtract the max (prevent overflow)

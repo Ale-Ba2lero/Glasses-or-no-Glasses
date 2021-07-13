@@ -15,6 +15,9 @@ class Model:
         self.BATCH_SIZE = None
         self.STEP_SIZE = None
 
+        self.forward_time = 0
+        self.backward_time = 0
+
     def train(self, X: np.ndarray = None, y: np.ndarray = None, epochs: int = 1, batch_size: int = None,
               step_size: float = 1e-0, log_freq=1000):
         self.X = X
@@ -40,6 +43,7 @@ class Model:
                 y_batch = y[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
 
                 output = X_batch
+
                 for layer in self.layers:
                     output = layer.forward(output)
 

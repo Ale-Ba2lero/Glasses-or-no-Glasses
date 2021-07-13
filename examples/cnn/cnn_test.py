@@ -1,8 +1,9 @@
 # %%
-
+from tqdm import tqdm
 import idx2numpy
 import numpy as np
 from examples.cnn.cnn_layers import Conv3x3, MaxPool2, Softmax
+import time
 
 train_images_file = 'dataset/train-images.idx3-ubyte'
 train_labels_file = 'dataset/train-labels.idx1-ubyte'
@@ -23,6 +24,11 @@ conv = Conv3x3(8)  # 28x28x1 -> 26x26x8
 pool = MaxPool2()  # 26x26x8 -> 13x13x8
 softmax = Softmax(13 * 13 * 8, 10)  # 13x13x8 -> 10
 
+global forward_time
+global backward_time
+
+forward_time = 0
+backward_time = 0
 
 def forward(image, label):
     '''
@@ -53,17 +59,25 @@ def train(img, label, lr=.005):
     - lr is the learning rate
     '''
 
+    start = time.time()
     # Forward
     out, loss, acc = forward(img, label)
+    end = time.time()
+    global forward_time
+    forward_time += (end - start)
 
     # Calculate initial gradient
     gradient = np.zeros(10)
     gradient[label] = -1 / out[label]
 
+    start = time.time()
     # Backprop
     gradient = softmax.backprop(gradient, lr)
     gradient = pool.backprop(gradient)
     gradient = conv.backprop(gradient, lr)
+    end = time.time()
+    global backward_time
+    backward_time += (end - start)
 
     return loss, acc
 
@@ -71,7 +85,7 @@ def train(img, label, lr=.005):
 print('MNIST CNN initialized!')
 
 # Train the CNN for 3 epochs
-for epoch in range(3):
+for epoch in tqdm(range(3)):
     print('--- Epoch %d ---' % (epoch + 1))
 
     # Shuffle the training data
@@ -107,3 +121,6 @@ for im, label in zip(test_images, test_labels):
 num_tests = len(test_images)
 print('Test Loss:', loss / num_tests)
 print('Test Accuracy:', num_correct / num_tests)
+
+print(forward_time)
+print(backward_time)

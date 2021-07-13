@@ -38,5 +38,29 @@ print(compute1(inp))
 print(compute2(inp))
 print(np.exp(inp - log_sum_exp(inp)))
 
+# %%
 
+import numpy as np
 
+filters = np.array([[[0, 1, 0],
+                     [0, 1, 0],
+                     [0, 1, 0]],
+                    [[1, 0, 0],
+                     [0, 1, 0],
+                     [0, 0, 1]]])
+img = np.array([[[0.5, 0.7, 0.2],
+                 [0.4, 0.7, 0.2],
+                 [0.4, 0.3, 0.2]],
+                [[0.3, 0.2, 0.1],
+                 [0.1, 0.2, 0.7],
+                 [0.4, 0.9, 0.8]]])
+
+out = np.zeros((2, 2))
+out1 = np.zeros((2, 2))
+
+for f in range(len(filters)):
+    for d in range(len(img)):
+        pr = img[d] * filters[f]
+        out[d, f] = np.sum(pr, axis=(0, 1))
+
+print(out)
