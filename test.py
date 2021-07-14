@@ -1,5 +1,5 @@
 # %%
-import numpy as np
+"""import numpy as np
 
 
 def compute1(inputs: np.ndarray) -> np.ndarray:
@@ -36,7 +36,7 @@ inp = np.array([[-1000, 0.4, 0.6],
 
 print(compute1(inp))
 print(compute2(inp))
-print(np.exp(inp - log_sum_exp(inp)))
+print(np.exp(inp - log_sum_exp(inp)))"""
 
 # %%
 
@@ -48,19 +48,21 @@ filters = np.array([[[0, 1, 0],
                     [[1, 0, 0],
                      [0, 1, 0],
                      [0, 0, 1]]])
+
 img = np.array([[[0.5, 0.7, 0.2],
                  [0.4, 0.7, 0.2],
-                 [0.4, 0.3, 0.2]],
-                [[0.3, 0.2, 0.1],
-                 [0.1, 0.2, 0.7],
-                 [0.4, 0.9, 0.8]]])
+                 [0.4, 0.3, 0.2]]])
 
-out = np.zeros((2, 2))
-out1 = np.zeros((2, 2))
+out = np.zeros((2, 1))
 
-for f in range(len(filters)):
-    for d in range(len(img)):
-        pr = img[d] * filters[f]
-        out[d, f] = np.sum(pr, axis=(0, 1))
+flat_filters = filters.reshape(2, 9)
+flat_image = img.flatten()
+pr = flat_image * flat_filters
+
+pr = pr.reshape(2, 3, 3)
+print(pr)
+out = np.sum(pr, axis=(1, 2))
 
 print(out)
+
+# %%

@@ -13,7 +13,6 @@ from tqdm import tqdm
 from PIL import Image
 import matplotlib.pyplot as plt
 from model.model import Model
-import time
 
 import idx2numpy
 
@@ -66,6 +65,8 @@ backward_time = 0
 
 conv = Conv(num_filters=10, padding=1)
 relu = ReLU()
+conv2 = Conv(num_filters=10, padding=1)
+relu2 = ReLU()
 mp = MaxPool2()
 flatten = Flatten()
 dense = Dense(10)
@@ -75,7 +76,9 @@ loss_function = CategoricalCrossEntropy()
 
 conv.setup(X_train[0].shape)
 relu.setup(conv.output_shape)
-mp.setup(relu.output_shape)
+conv2.setup(relu.output_shape)
+relu2.setup(conv2.output_shape)
+mp.setup(relu2.output_shape)
 flatten.setup(mp.output_shape)
 dense.setup(flatten.output_shape)
 
@@ -89,11 +92,6 @@ dense.setup(flatten.output_shape)
 n_batches: int = len(X_train) // BATCH_SIZE
 extra_batch: int = int(len(X_train) % BATCH_SIZE > 0)
 
-print(f'training set size: {len(X_train)}')
-print(f'epochs: {N_EPOCHS}')
-print(f'batch size: {BATCH_SIZE}')
-print(f'batches: {n_batches}\nextra batch: {extra_batch}\n')
-
 for i in tqdm(range(N_EPOCHS)):
     loss = 0
     num_correct = 0
@@ -102,47 +100,45 @@ for i in tqdm(range(N_EPOCHS)):
             print_loss = "{:.2}".format(loss / 100)
             print_acc = "{:.2%}".format(num_correct / 100)
             print(f"\niteration {j + 1}: loss {print_loss} |  acc {print_acc}")
-
+            conv.print_time()
             loss = 0
             num_correct = 0
 
-        start = time.time()
-        """-----------------"""
         X_batch = X_train[j * BATCH_SIZE:(j + 1) * BATCH_SIZE]
         y_batch = y_train[j * BATCH_SIZE:(j + 1) * BATCH_SIZE]
+
         out = conv.forward(X_batch)
         out = relu.forward(out)
+        out = conv2.forward(out)
+        out = relu2.forward(out)
         out = mp.forward(out)
         out = flatten.forward(out)
         out = dense.forward(out)
         out = softmax.forward(out)
-        """-----------------"""
-        end = time.time()
-        forward_time += (end - start)
 
         l, acc, d_score = loss_function.calculate(out, y_batch)
         loss += l
         num_correct += acc
 
-        start = time.time()
-        """-----------------"""
         d_score = dense.backpropagation(d_score)
         d_score = flatten.backpropagation(d_score)
         d_score = mp.backpropagation(d_score)
+        d_score = relu2.backpropagation(d_score)
+        d_score = conv2.backpropagation(d_score)
         d_score = relu.backpropagation(d_score)
         d_score = conv.backpropagation(d_score)
-        """-----------------"""
-        end = time.time()
-        backward_time += (end - start)
 
         dense.update(STEP_SIZE)
         conv.update(STEP_SIZE)
+        conv2.update(STEP_SIZE)
 
 # ------------------------------------ EVALUTATE THE MODEL
 """nn.evaluate(X_test=X_test, y_test=y_test)"""
 
 output = conv.forward(X_test)
 output = relu.forward(output)
+output = conv2.forward(X_test)
+output = relu2.forward(output)
 output = mp.forward(output)
 output = flatten.forward(output)
 output = dense.forward(output)
@@ -152,5 +148,3 @@ predicted_class = np.argmax(output, axis=1)
 accuracy = "{:.2%}".format(np.mean(predicted_class == y_test))
 print(f'Test accuracy: {accuracy}')
 
-print(forward_time)
-print(backward_time)

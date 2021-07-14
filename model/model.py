@@ -86,7 +86,6 @@ class Model:
             self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
 
     def summary(self):
-        # TODO
         pass
 
     def evaluate(self, X_test, y_test):
