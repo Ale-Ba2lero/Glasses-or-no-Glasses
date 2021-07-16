@@ -21,6 +21,5 @@ class LeakyReLU(Layer):
         return self.output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
-        backprop = lambda x: self.alpha if x < 0 else 1
-        return np.vectorize(backprop)(d_score)
-
+        d_score[self.output <= 0] *= self.alpha
+        return d_score

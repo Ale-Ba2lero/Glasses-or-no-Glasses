@@ -37,24 +37,34 @@ class Model:
             self.layer_setup(self.layers[layer_idx], layer_idx, X[0].shape)
 
         for i in tqdm(range(self.EPOCHS)):
+            loss = 0
+            num_correct = 0
             for j in range(n_batches + extra_batch):
+                # print loss
+
+                if j > 0 and j % 100 == 99:
+                    print_loss = "{:.2}".format(loss / 100)
+                    print_acc = "{:.2%}".format(num_correct / 100)
+                    print(f"\niteration {j + 1}: loss {print_loss} |  acc {print_acc}")
+                    loss = 0
+                    num_correct = 0
 
                 X_batch = X[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
                 y_batch = y[j * self.BATCH_SIZE:(j + 1) * self.BATCH_SIZE]
-
                 output = X_batch
 
                 for layer in self.layers:
                     output = layer.forward(output)
 
                 # calculate loss
-                loss, acc, d_score = self.loss_function.calculate(output, y_batch)
+                l, acc, d_score = self.loss_function.calculate(output, y_batch)
+                loss += l
+                num_correct += acc
 
-                # print loss
-                if i % log_freq == 0 and j == 0:
-                    print_loss = "{:.2}".format(loss)
+                """if i % log_freq == 0 and j == 0:
+                    print_loss = "{:.2}".format(l)
                     print_acc = "{:.2%}".format(acc)
-                    print(f"\niteration {i}: loss {print_loss} |  acc {print_acc}")
+                    print(f"\niteration {i}: loss {print_loss} |  acc {print_acc}")"""
 
                 for layer in reversed(self.layers):
                     d_score = layer.backpropagation(d_score=d_score)

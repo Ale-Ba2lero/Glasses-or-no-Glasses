@@ -66,3 +66,17 @@ out = np.sum(pr, axis=(1, 2))
 print(out)
 
 # %%
+import numpy as np
+
+
+def backpropagation(d_score):
+    new_d_score = [0.5 if x < 0 else 1 for x in d_score]
+    return new_d_score
+
+
+d = np.array([0.4, 1.2, -3, 0.9, -1, 0.2, 3])
+o = np.array([-1, 3, 2, -9, -1, 4, -3])
+
+print(backpropagation(d))
+d[o <= 0] = 0
+print(d)

@@ -32,6 +32,7 @@ class MaxPool2(Layer):
 
         for img_region, i, j in self.iterate_regions(inputs):
             output[:, i, j, :] = np.amax(img_region, axis=(1, 2))
+
         return output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
@@ -44,4 +45,5 @@ class MaxPool2(Layer):
                     # If the pixel was the max value, copy the gradient to it.
                     if (img_region[:, idx_h, idx_w, :] == region_max).all:
                         d_input[:, i * 2 + idx_h, j * 2 + idx_w, :] = d_score[:, i, j, :]
+
         return d_input
