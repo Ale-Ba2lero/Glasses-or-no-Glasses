@@ -69,14 +69,38 @@ print(out)
 import numpy as np
 
 
-def backpropagation(d_score):
+def LR_b(d_score):
     new_d_score = [0.5 if x < 0 else 1 for x in d_score]
     return new_d_score
 
 
+alpha = 0.001
+
 d = np.array([0.4, 1.2, -3, 0.9, -1, 0.2, 3])
 o = np.array([-1, 3, 2, -9, -1, 4, -3])
 
-print(backpropagation(d))
-d[o <= 0] = 0
-print(d)
+lr = np.where(d > 0, d, alpha)
+
+print(lr)
+# %%
+import numpy as np
+
+a = np.array([1, 2, 3, 4, 5])
+b = np.array([2, 2, 2, 2])
+
+c = np.tile(a, (len(b), 1))
+z = np.zeros((4,5))
+prod_ = (c.T * b).T
+print(c)
+print(z)
+print(prod_)
+z += prod_
+print(z)
+
+# %%
+import numpy as np
+
+a = np.array([0, 0, 0, 0, 0])
+all_zeros = not np.any(a)
+
+print(all_zeros)

@@ -49,14 +49,14 @@ X_train, X_test, y_train, y_test = train_test_split(train_images,
                                                     train_labels,
                                                     test_size=0.1,
                                                     random_state=69)
-STEP_SIZE = 1e-1
-N_EPOCHS = 3
+STEP_SIZE = 1e-2
+N_EPOCHS = 2
 BATCH_SIZE = len(X_train) // len(X_train)
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv(num_filters=10, padding=1), LeakyReLU(),
-    Conv(num_filters=2, padding=1), LeakyReLU(),
+    Conv(num_filters=15), LeakyReLU(),
+    Conv(num_filters=10), LeakyReLU(),
     MaxPool2(),
     Flatten(),
     Dense(10), Softmax()
@@ -67,8 +67,7 @@ nn.train(X=X_train,
          y=y_train,
          epochs=N_EPOCHS,
          batch_size=BATCH_SIZE,
-         step_size=STEP_SIZE,
-         log_freq=1)
+         step_size=STEP_SIZE)
 
 # ------------------------------------ EVALUTATE THE MODEL
 nn.evaluate(X_test=X_test, y_test=y_test)

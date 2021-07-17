@@ -6,7 +6,7 @@ import numpy as np
 
 class LeakyReLU(Layer):
 
-    def __init__(self, alpha=1e-1):
+    def __init__(self, alpha=1e-2):
         super().__init__()
         self.alpha = alpha
         self.layer_type = LayerType.RELU

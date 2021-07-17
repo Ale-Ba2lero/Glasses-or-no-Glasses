@@ -19,7 +19,7 @@ class Model:
         self.backward_time = 0
 
     def train(self, X: np.ndarray = None, y: np.ndarray = None, epochs: int = 1, batch_size: int = None,
-              step_size: float = 1e-0, log_freq=1000):
+              step_size: float = 1e-0):
         self.X = X
         self.y = y
         self.EPOCHS = epochs
@@ -61,7 +61,7 @@ class Model:
                 loss += l
                 num_correct += acc
 
-                """if i % log_freq == 0 and j == 0:
+                """if i % 1 == 0 and j == 0:
                     print_loss = "{:.2}".format(l)
                     print_acc = "{:.2%}".format(acc)
                     print(f"\niteration {i}: loss {print_loss} |  acc {print_acc}")"""
@@ -75,6 +75,7 @@ class Model:
                         layer.update(step_size)
 
     def layer_setup(self, layer: Layer, layer_idx: int, input_shape: tuple):
+        layer.id_ = layer_idx
         if layer.layer_type == LayerType.DENSE:
             if layer_idx == 0:
                 self.layers[layer_idx].setup(input_shape=input_shape[0], next_layer=self.layers[layer_idx + 1])

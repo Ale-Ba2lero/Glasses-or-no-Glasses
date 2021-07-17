@@ -125,31 +125,45 @@ class Conv(Layer):
         return output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
+
         self.d_filters = np.zeros(self.filters.shape)
         new_d_score = np.zeros(self.last_input.shape)
-
         # filters delta
         start = time.time()
         batch_size = d_score.shape[0]
 
         for b in range(batch_size):
             for img_region, i, j in iterate_regions(self.last_input, kernel=self.kernel_size, stride=self.stride):
+                # Equivalent but much slower
+                """
                 for f in range(self.num_filters):
                     if len(self.d_filters.shape) == 3:
                         self.d_filters[:, :, f] += d_score[b, i, j, f] * img_region[b]
+
                     elif len(self.d_filters.shape) == 4:
                         self.d_filters[:, :, :, f] += d_score[b, i, j, f] * img_region[b]
+                """
+                d_score_flatten = d_score[b, i, j].flatten()
+                img_region_flatten = np.tile(img_region[b].flatten(), (self.num_filters, 1))
+                prod_ = (img_region_flatten.T * d_score_flatten)
+                prod_ = prod_.reshape(self.d_filters.shape)
+                self.d_filters += prod_
 
-                # TODO execute this only if there is another layer before
-                flat_filters_size = np.prod(self.filters.shape[:-1])
+                # TODO execute this only if there is another layer to propagate
+                if len(self.filters.shape) == 4:
+                    for f in range(self.num_filters):
+                        new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] += d_score[
+                                                                                              b, i, j, f] * self.filters[
+                                                                                                            :, :, :, f]
+
+                """flat_filters_size = np.prod(self.filters.shape[:-1])
                 filter_shape = self.filters.shape[:-1]
                 f_filters = self.filters.reshape(flat_filters_size, self.num_filters)
                 f_d_score = d_score[b, i, j].flatten()
                 prod_ = (f_filters * f_d_score.T).reshape(flat_filters_size, self.num_filters)
                 sum_ = np.sum(prod_, axis=1)
-                new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] = sum_.reshape(filter_shape)
+                new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] = sum_.reshape(filter_shape)"""
 
-                # new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size, :] += self.filters[:, :, :, f] * d_score[ b, i, j, f]
         end = time.time()
         self.b_time += (end - start)
         return new_d_score
