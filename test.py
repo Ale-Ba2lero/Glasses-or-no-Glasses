@@ -100,7 +100,7 @@ print(z)
 # %%
 import numpy as np
 
-a = np.array([0, 0, 0, 0, 0])
-all_zeros = not np.any(a)
+a = np.array([1, 2, 3, 4, 5])
+b = a[:4]
 
-print(all_zeros)
+print(b)

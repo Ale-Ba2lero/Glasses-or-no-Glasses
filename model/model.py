@@ -24,7 +24,6 @@ class Model:
         self.y = y
         self.EPOCHS = epochs
         self.BATCH_SIZE = batch_size
-
         n_batches: int = len(X) // self.BATCH_SIZE
         extra_batch: int = int(len(X) % self.BATCH_SIZE > 0)
 
@@ -41,7 +40,6 @@ class Model:
             num_correct = 0
             for j in range(n_batches + extra_batch):
                 # print loss
-
                 if j > 0 and j % 100 == 99:
                     print_loss = "{:.2}".format(loss / 100)
                     print_acc = "{:.2%}".format(num_correct / 100)
@@ -61,11 +59,11 @@ class Model:
                 loss += l
                 num_correct += acc
 
-                """if i % 1 == 0 and j == 0:
+                """if i % 100 == 0 and j == 0:
                     print_loss = "{:.2}".format(l)
                     print_acc = "{:.2%}".format(acc)
-                    print(f"\niteration {i}: loss {print_loss} |  acc {print_acc}")"""
-
+                    print(f"\niteration {i}: loss {print_loss} |  acc {print_acc}")
+                """
                 for layer in reversed(self.layers):
                     d_score = layer.backpropagation(d_score=d_score)
 
@@ -108,3 +106,7 @@ class Model:
         predicted_class = np.argmax(output, axis=1)
         acc = "{:.2%}".format(np.mean(predicted_class == y_test))
         print(f'Test accuracy: {acc}')
+
+        for layer in self.layers:
+            if layer.layer_type == LayerType.CONV:
+                layer.print_time()
