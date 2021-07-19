@@ -98,7 +98,7 @@ class Model:
     def summary(self):
         pass
 
-    def evaluate(self, X_test, y_test):
+    def evaluate(self, X_test, y_test, text=""):
         # forward step
         output = X_test
         for layer in self.layers:
@@ -109,7 +109,7 @@ class Model:
 
         predicted_class = np.argmax(output, axis=1)
         acc = "{:.2%}".format(np.mean(predicted_class == y_test))
-        print(f'Test accuracy: {acc}')
+        print(f'{text} accuracy: {acc}')
 
         for layer in self.layers:
             if layer.layer_type == LayerType.CONV:

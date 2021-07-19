@@ -29,17 +29,21 @@ class Conv2D(Layer):
         self.input_shape: tuple = input_shape
         self.output_shape: tuple = self.convolution_compatibility(input_shape)
 
-        self.biases = self.init_param(self.num_filters)
-
         # / np.sqrt(self.input_shape) <- Xavier initialization
         if len(input_shape) == 2:
-            self.filters: np.ndarray = np.random.random_sample(
-                (self.kernel_size, self.kernel_size, self.num_filters)) / np.sqrt(self.kernel_size ** 2)
+            filters_shape = (self.kernel_size, self.kernel_size, self.num_filters)
+            self.filters: np.ndarray = self.init_param(filters_shape)
+            """self.filters: np.ndarray = np.random.random_sample(
+                (self.kernel_size, self.kernel_size, self.num_filters)) / np.sqrt(self.kernel_size ** 2)"""
 
         elif len(input_shape) == 3:
-            self.filters: np.ndarray = np.random.random_sample(
+            filters_shape = (self.kernel_size, self.kernel_size, self.input_shape[2], self.num_filters)
+            self.filters: np.ndarray = self.init_param(filters_shape)
+            """self.filters: np.ndarray = np.random.random_sample(
                 (self.kernel_size, self.kernel_size, self.input_shape[2], self.num_filters)) / np.sqrt(
-                self.kernel_size * self.kernel_size * self.input_shape[2])
+                self.kernel_size * self.kernel_size * self.input_shape[2])"""
+
+        self.biases = self.init_param(self.num_filters)
 
     @staticmethod
     def init_param(size):
@@ -115,14 +119,12 @@ class Conv2D(Layer):
                 depth = self.filters.shape[2] if len(self.filters.shape) == 4 else 1
                 flatten_image = img_region[b].flatten()
                 flatten_filters = self.filters.reshape((self.kernel_size ** 2) * depth, self.num_filters)
-                prod_ = (flatten_filters.T * flatten_image).T
-                output[b, i, j] = np.sum(prod_, axis=0)  # + self.biases
+                output[b, i, j] = np.dot(flatten_filters.T, flatten_image) + self.biases
         end = time.time()
         self.f_time += (end - start)
         return output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
-
         self.d_filters = np.zeros(self.filters.shape)
         self.d_biases = np.zeros(self.num_filters)
         new_d_score = np.zeros(self.last_input.shape)
@@ -131,14 +133,11 @@ class Conv2D(Layer):
         batch_size = d_score.shape[0]
         for b in range(batch_size):
             self.d_biases = np.sum(d_score[b], axis=(0, 1))
-
             for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size, stride=self.stride):
-
                 # Equivalent but slower
                 """for f in range(self.num_filters):
                     if len(self.d_filters.shape) == 3:
                         self.d_filters[:, :, f] += d_score[b, i, j, f] * img_region[b]
-
                     elif len(self.d_filters.shape) == 4:
                         self.d_filters[:, :, :, f] += d_score[b, i, j, f] * img_region[b]"""
                 d_score_flatten = d_score[b, i, j].flatten()
@@ -148,6 +147,7 @@ class Conv2D(Layer):
                 self.d_filters += prod_
 
                 # Execute this only if there is another layer to propagate
+                # TODO sometimes it may be executed also if there is no other layer to propagate (fix?)
                 if len(self.filters.shape) == 4:
                     # Equivalent but slower
                     """for f in range(self.num_filters):
@@ -156,8 +156,7 @@ class Conv2D(Layer):
                     d_score_flatten = d_score[b, i, j].flatten()
                     filters_flatten = self.filters.reshape(np.prod(self.filters.shape[:-1]), self.num_filters)
                     prod_ = (filters_flatten * d_score_flatten).reshape(self.filters.shape)
-                    sum_ = np.sum(prod_, axis=3)
-                    new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] += sum_
+                    new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] += np.sum(prod_, axis=3)
 
         end = time.time()
         self.b_time += (end - start)

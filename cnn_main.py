@@ -47,14 +47,10 @@ BATCH_SIZE = 1  # len(X_train) // 10
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv2D(num_filters=10, kernel_size=3, padding=1), LeakyReLU(),
-    MaxPool2D(),
-    Conv2D(num_filters=8, kernel_size=3, padding=1), LeakyReLU(),
-    MaxPool2D(),
-    Dropout(0.2),
+    Conv2D(num_filters=10, kernel_size=3, padding=1), LeakyReLU(), MaxPool2D(),
+    Conv2D(num_filters=8, kernel_size=3, padding=1), LeakyReLU(), MaxPool2D(),
     Flatten(),
-    Dense(256), LeakyReLU(),
-    Dropout(0.2),
+    Dense(256), LeakyReLU(), Dropout(0.2),
     Dense(10), Softmax()
 ], CategoricalCrossEntropy())
 
@@ -66,4 +62,5 @@ nn.train(X=X_train,
          step_size=STEP_SIZE)
 
 # ------------------------------------ EVALUTATE THE MODEL
-nn.evaluate(X_test=X_test, y_test=y_test)
+nn.evaluate(X_test=X_train, y_test=y_train, text="Train")
+nn.evaluate(X_test=X_test, y_test=y_test, text="Test")
