@@ -91,6 +91,7 @@ class Model:
                 layer.layer_type == LayerType.FLATTEN or \
                 layer.layer_type == LayerType.RELU or \
                 layer.layer_type == LayerType.SOFTMAX or \
+                layer.layer_type == LayerType.DROPOUT or \
                 (layer.layer_type == LayerType.CONV and layer_idx != 0):
             self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
 
@@ -101,7 +102,10 @@ class Model:
         # forward step
         output = X_test
         for layer in self.layers:
-            output = layer.forward(output)
+            if layer.layer_type is not LayerType.DROPOUT:
+                output = layer.forward(output)
+            else:
+                output = layer.forward(output, train=False)
 
         predicted_class = np.argmax(output, axis=1)
         acc = "{:.2%}".format(np.mean(predicted_class == y_test))

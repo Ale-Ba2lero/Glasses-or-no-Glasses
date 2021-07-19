@@ -4,7 +4,7 @@ from model.layers.layer import Layer, LayerType
 import numpy as np
 
 
-class MaxPool2(Layer):
+class MaxPool2D(Layer):
 
     def __init__(self):
         super().__init__()

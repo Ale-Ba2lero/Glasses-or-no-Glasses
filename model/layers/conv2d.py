@@ -4,45 +4,7 @@ from tqdm import tqdm
 import time
 
 
-def iterate_regions(inputs: np.ndarray, kernel: int = 3, stride: int = 1) -> (
-        np.ndarray, int, int):
-    h: int = 0
-    w: int = 0
-    img_region = None
-
-    if len(inputs.shape) == 3:
-        b, h, w = inputs.shape
-        img_region = np.zeros((b, kernel, kernel))
-    elif len(inputs.shape) == 4:
-        b, h, w, d = inputs.shape
-        img_region = np.zeros((b, kernel, kernel, d))
-
-    h_limit = h - kernel + 1
-    w_limit = w - kernel + 1
-
-    for i in range(0, h_limit, stride):
-        for j in range(0, w_limit, stride):
-            if len(inputs.shape) == 3:
-                img_region = inputs[:, i:(i + kernel), j:(j + kernel)]
-            elif len(inputs.shape) == 4:
-                img_region = inputs[:, i:(i + kernel), j:(j + kernel), :]
-            yield img_region, i, j
-
-
-def zero_padding(inputs: np.ndarray, padding: int = 1) -> np.ndarray:
-    canvas = None
-    if len(inputs.shape) == 3:
-        b, h, w = inputs.shape
-        canvas = np.zeros((b, h + padding * 2, w + padding * 2))
-        canvas[:, padding:h + padding, padding:w + padding] = inputs
-    elif len(inputs.shape) == 4:
-        b, h, w, d = inputs.shape
-        canvas = np.zeros((b, h + padding * 2, w + padding * 2, d))
-        canvas[:, padding:h + padding, padding:w + padding] = inputs
-    return canvas
-
-
-class Conv(Layer):
+class Conv2D(Layer):
 
     def __init__(self, num_filters: int, kernel_size: int = 3, padding: int = 0, stride: int = 1):
         super().__init__()
@@ -54,19 +16,20 @@ class Conv(Layer):
 
         # TODO add bias?
         self.filters = None
-        self.b = None
+        self.biases = None
         self.d_filters = None
+        self.d_biases = None
         self.last_input = None
 
         self.f_time = 0
         self.b_time = 0
 
     def setup(self, input_shape: tuple):
-        """if len(input_shape) == 4:
-            input_shape = input_shape[1:]"""
 
         self.input_shape: tuple = input_shape
         self.output_shape: tuple = self.convolution_compatibility(input_shape)
+
+        self.biases = self.init_param(self.num_filters)
 
         # / np.sqrt(self.input_shape) <- Xavier initialization
         if len(input_shape) == 2:
@@ -78,7 +41,48 @@ class Conv(Layer):
                 (self.kernel_size, self.kernel_size, self.input_shape[2], self.num_filters)) / np.sqrt(
                 self.kernel_size * self.kernel_size * self.input_shape[2])
 
-        """self.b: np.ndarray = np.zeros((1, self.num_filters))"""
+    @staticmethod
+    def init_param(size):
+        stddev = 1 / np.sqrt(np.prod(size))
+        return np.random.normal(loc=0, scale=stddev, size=size)
+
+    @staticmethod
+    def iterate_regions(inputs: np.ndarray, kernel: int = 3, stride: int = 1) -> (
+            np.ndarray, int, int):
+        h: int = 0
+        w: int = 0
+        img_region = None
+
+        if len(inputs.shape) == 3:
+            b, h, w = inputs.shape
+            img_region = np.zeros((b, kernel, kernel))
+        elif len(inputs.shape) == 4:
+            b, h, w, d = inputs.shape
+            img_region = np.zeros((b, kernel, kernel, d))
+
+        h_limit = (h - kernel) / stride + 1
+        w_limit = (w - kernel) / stride + 1
+
+        for i in range(0, int(h_limit), stride):
+            for j in range(0, int(w_limit), stride):
+                if len(inputs.shape) == 3:
+                    img_region = inputs[:, i:(i + kernel), j:(j + kernel)]
+                elif len(inputs.shape) == 4:
+                    img_region = inputs[:, i:(i + kernel), j:(j + kernel), :]
+                yield img_region, i, j
+
+    @staticmethod
+    def zero_padding(inputs: np.ndarray, padding: int = 1) -> np.ndarray:
+        canvas = None
+        if len(inputs.shape) == 3:
+            b, h, w = inputs.shape
+            canvas = np.zeros((b, h + padding * 2, w + padding * 2))
+            canvas[:, padding:h + padding, padding:w + padding] = inputs
+        elif len(inputs.shape) == 4:
+            b, h, w, d = inputs.shape
+            canvas = np.zeros((b, h + padding * 2, w + padding * 2, d))
+            canvas[:, padding:h + padding, padding:w + padding] = inputs
+        return canvas
 
     def convolution_compatibility(self, input_shape: tuple) -> (int, int, int):
         h, w = 0, 0
@@ -95,69 +99,65 @@ class Conv(Layer):
 
         if output_layer_h % 1 != 0 or output_layer_w % 1 != 0:
             raise ValueError('Error!: hyper parameters setting is invalid!')
-
         return int(output_layer_h), int(output_layer_w), self.num_filters
 
     def forward(self, inputs: np.ndarray) -> np.ndarray:
         self.last_input: np.ndarray = inputs
         if self.padding > 0:
-            inputs = zero_padding(inputs, self.padding)
+            inputs = self.zero_padding(inputs, self.padding)
 
         batch_size: int = inputs.shape[0]
         output = np.zeros((batch_size,) + self.output_shape)
 
         start = time.time()
-        for img_region, i, j in iterate_regions(inputs, kernel=self.kernel_size, stride=self.stride):
+        for img_region, i, j in self.iterate_regions(inputs, kernel=self.kernel_size, stride=self.stride):
             for b in range(batch_size):
                 depth = self.filters.shape[2] if len(self.filters.shape) == 4 else 1
                 flatten_image = img_region[b].flatten()
                 flatten_filters = self.filters.reshape((self.kernel_size ** 2) * depth, self.num_filters)
                 prod_ = (flatten_filters.T * flatten_image).T
-                output[b, i, j] = np.sum(prod_, axis=0)
+                output[b, i, j] = np.sum(prod_, axis=0)  # + self.biases
         end = time.time()
         self.f_time += (end - start)
         return output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
+
         self.d_filters = np.zeros(self.filters.shape)
+        self.d_biases = np.zeros(self.num_filters)
         new_d_score = np.zeros(self.last_input.shape)
         # filters delta
         start = time.time()
         batch_size = d_score.shape[0]
-        nds = new_d_score
         for b in range(batch_size):
-            for img_region, i, j in iterate_regions(self.last_input, kernel=self.kernel_size, stride=self.stride):
+            self.d_biases = np.sum(d_score[b], axis=(0, 1))
 
-                """
-                # Equivalent but much slower
-                
-                for f in range(self.num_filters):
+            for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size, stride=self.stride):
+
+                # Equivalent but slower
+                """for f in range(self.num_filters):
                     if len(self.d_filters.shape) == 3:
                         self.d_filters[:, :, f] += d_score[b, i, j, f] * img_region[b]
 
                     elif len(self.d_filters.shape) == 4:
-                        self.d_filters[:, :, :, f] += d_score[b, i, j, f] * img_region[b]
-                """
+                        self.d_filters[:, :, :, f] += d_score[b, i, j, f] * img_region[b]"""
                 d_score_flatten = d_score[b, i, j].flatten()
                 img_region_flatten = np.tile(img_region[b].flatten(), (self.num_filters, 1))
                 prod_ = (img_region_flatten.T * d_score_flatten)
                 prod_ = prod_.reshape(self.d_filters.shape)
                 self.d_filters += prod_
 
-                # execute this only if there is another layer to propagate
+                # Execute this only if there is another layer to propagate
                 if len(self.filters.shape) == 4:
                     # Equivalent but slower
-                    """
-                    for f in range(self.num_filters):
+                    """for f in range(self.num_filters):
                         new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] += \
-                            d_score[b, i, j, f] * self.filters[:, :, :, f]
-                    """
-
+                            d_score[b, i, j, f] * self.filters[:, :, :, f]"""
                     d_score_flatten = d_score[b, i, j].flatten()
                     filters_flatten = self.filters.reshape(np.prod(self.filters.shape[:-1]), self.num_filters)
                     prod_ = (filters_flatten * d_score_flatten).reshape(self.filters.shape)
                     sum_ = np.sum(prod_, axis=3)
-                    nds[b, i:i + self.kernel_size, j:j + self.kernel_size] += sum_
+                    new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] += sum_
 
         end = time.time()
         self.b_time += (end - start)
@@ -165,6 +165,7 @@ class Conv(Layer):
 
     def update(self, learn_rate: float = 1e-0) -> None:
         self.filters = self.filters + (-learn_rate * self.d_filters)
+        self.biases = self.biases + (-learn_rate * self.biases)
 
     def print_time(self):
         print(f"f-time:{self.f_time} | b-time:{self.b_time}")

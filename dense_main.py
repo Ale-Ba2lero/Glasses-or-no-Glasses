@@ -5,7 +5,7 @@ from sklearn.preprocessing import minmax_scale
 import matplotlib.pyplot as plt
 from model.loss import CategoricalCrossEntropy
 from model.layers.dense import Dense
-from model.layers.ReLU import ReLU
+from model.layers.relu import ReLU
 from model.layers.softmax import Softmax
 from model.layers.leakyReLU import LeakyReLU
 from model.model import Model

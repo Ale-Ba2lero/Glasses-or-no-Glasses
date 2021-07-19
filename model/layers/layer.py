@@ -10,6 +10,7 @@ class LayerType(Enum):
     FLATTEN = auto()
     RELU = auto()
     SOFTMAX = auto()
+    DROPOUT = auto()
 
 
 class Layer(abc.ABC):

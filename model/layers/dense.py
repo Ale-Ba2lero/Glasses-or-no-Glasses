@@ -1,13 +1,11 @@
-from model.activations import Activation, ReLU
 from model.layers.layer import Layer, LayerType
 import numpy as np
 
 
 class Dense(Layer):
-    def __init__(self, num_neurons, activation=None) -> None:
+    def __init__(self, num_neurons) -> None:
         super().__init__()
         self.num_neurons: int = num_neurons
-        self.activation: Activation = activation
         self.layer_type: LayerType = LayerType.DENSE
 
         self.batch_size = None

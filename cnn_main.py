@@ -1,12 +1,12 @@
 from sklearn.model_selection import train_test_split
 
-from model.layers.conv import Conv
+from model.layers.conv2d import Conv2D
 from model.layers.dense import Dense
-from model.layers.maxpool2 import MaxPool2
+from model.layers.maxpool2d import MaxPool2D
 from model.layers.flatten import Flatten
-from model.layers.ReLU import ReLU
-from model.layers.leakyReLU import LeakyReLU
+from model.layers.relu import ReLU, LeakyReLU
 from model.layers.softmax import Softmax
+from model.layers.dropout import Dropout
 from model.loss import CategoricalCrossEntropy
 import numpy as np
 import pandas as pd
@@ -39,18 +39,22 @@ ds_images /= 255.0
 
 X_train, X_test, y_train, y_test = train_test_split(ds_images,
                                                     ds_labels,
-                                                    test_size=0.2,
+                                                    test_size=0.1,
                                                     random_state=6)
 STEP_SIZE = 1e-2
 N_EPOCHS = 3
-BATCH_SIZE = 1 # len(X_train) // 10
+BATCH_SIZE = 1  # len(X_train) // 10
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv(num_filters=8, kernel_size=3), LeakyReLU(),
-    Conv(num_filters=5, kernel_size=3, padding=1), LeakyReLU(),
-    # Conv(num_filters=5, kernel_size=3, padding=1), LeakyReLU(),
+    Conv2D(num_filters=10, kernel_size=3, padding=1), LeakyReLU(),
+    MaxPool2D(),
+    Conv2D(num_filters=8, kernel_size=3, padding=1), LeakyReLU(),
+    MaxPool2D(),
+    Dropout(0.2),
     Flatten(),
+    Dense(256), LeakyReLU(),
+    Dropout(0.2),
     Dense(10), Softmax()
 ], CategoricalCrossEntropy())
 
@@ -63,4 +67,3 @@ nn.train(X=X_train,
 
 # ------------------------------------ EVALUTATE THE MODEL
 nn.evaluate(X_test=X_test, y_test=y_test)
-

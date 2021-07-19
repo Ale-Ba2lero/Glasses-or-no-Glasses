@@ -6,12 +6,12 @@ from tqdm import tqdm
 from PIL import Image
 
 from model.loss import CategoricalCrossEntropy
-from model.layers.conv import Conv
+from model.layers.conv2d import Conv2D
 from model.layers.dense import Dense
-from model.layers.maxpool2 import MaxPool2
+from model.layers.maxpool2d import MaxPool2D
 from model.layers.flatten import Flatten
 from model.layers.leakyReLU import LeakyReLU
-from model.layers.ReLU import ReLU
+from model.layers.relu import ReLU
 from model.layers.softmax import Softmax
 from model.model import Model
 import matplotlib.pyplot as plt
@@ -60,9 +60,9 @@ BATCH_SIZE = len(X_train) // 5 #len(X_train)
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
-    Conv(num_filters=8, padding=1), LeakyReLU(),
-    Conv(num_filters=5, padding=1), LeakyReLU(),
-    MaxPool2(),
+    Conv2D(num_filters=8, padding=1), LeakyReLU(),
+    Conv2D(num_filters=5, padding=1), LeakyReLU(),
+    MaxPool2D(),
     Flatten(),
     Dense(10), LeakyReLU(),
     Dense(2), Softmax()
