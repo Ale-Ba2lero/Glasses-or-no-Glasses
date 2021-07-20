@@ -2,6 +2,7 @@ from model.layers.layer import Layer, LayerType
 import numpy as np
 from tqdm import tqdm
 import time
+from model.utility import he_initialization
 
 
 class Conv2D(Layer):
@@ -14,7 +15,6 @@ class Conv2D(Layer):
         self.stride: int = stride
         self.layer_type: LayerType = LayerType.CONV
 
-        # TODO add bias?
         self.filters = None
         self.biases = None
         self.d_filters = None
@@ -27,28 +27,20 @@ class Conv2D(Layer):
     def setup(self, input_shape: tuple):
 
         self.input_shape: tuple = input_shape
-        self.output_shape: tuple = self.convolution_compatibility(input_shape)
+        self.output_shape: tuple = self.convolution_compatibility(input_shape=input_shape,
+                                                                  kernel_size=self.kernel_size,
+                                                                  padding=self.padding,
+                                                                  stride=self.stride) + (self.num_filters,)
 
-        # / np.sqrt(self.input_shape) <- Xavier initialization
         if len(input_shape) == 2:
             filters_shape = (self.kernel_size, self.kernel_size, self.num_filters)
-            self.filters: np.ndarray = self.init_param(filters_shape)
-            """self.filters: np.ndarray = np.random.random_sample(
-                (self.kernel_size, self.kernel_size, self.num_filters)) / np.sqrt(self.kernel_size ** 2)"""
+            self.filters: np.ndarray = he_initialization(units=filters_shape)
 
         elif len(input_shape) == 3:
             filters_shape = (self.kernel_size, self.kernel_size, self.input_shape[2], self.num_filters)
-            self.filters: np.ndarray = self.init_param(filters_shape)
-            """self.filters: np.ndarray = np.random.random_sample(
-                (self.kernel_size, self.kernel_size, self.input_shape[2], self.num_filters)) / np.sqrt(
-                self.kernel_size * self.kernel_size * self.input_shape[2])"""
+            self.filters: np.ndarray = he_initialization(units=filters_shape)
 
-        self.biases = self.init_param(self.num_filters)
-
-    @staticmethod
-    def init_param(size):
-        stddev = 1 / np.sqrt(np.prod(size))
-        return np.random.normal(loc=0, scale=stddev, size=size)
+        self.biases = np.zeros((1, self.num_filters))
 
     @staticmethod
     def iterate_regions(inputs: np.ndarray, kernel: int = 3, stride: int = 1) -> (
@@ -88,22 +80,23 @@ class Conv2D(Layer):
             canvas[:, padding:h + padding, padding:w + padding] = inputs
         return canvas
 
-    def convolution_compatibility(self, input_shape: tuple) -> (int, int, int):
+    @staticmethod
+    def convolution_compatibility(input_shape: tuple,
+                                  kernel_size: int = 3,
+                                  padding: int = 0,
+                                  stride: int = 1) -> (int, int):
         h, w = 0, 0
         if len(input_shape) == 2:
             h, w = input_shape
         elif len(input_shape) == 3:
             h, w, _ = input_shape
 
-        s = self.stride
-        p = self.padding
-
-        output_layer_h = (h - self.kernel_size + 2 * p) / s + 1
-        output_layer_w = (w - self.kernel_size + 2 * p) / s + 1
+        output_layer_h = (h - kernel_size + 2 * padding) / stride + 1
+        output_layer_w = (w - kernel_size + 2 * padding) / stride + 1
 
         if output_layer_h % 1 != 0 or output_layer_w % 1 != 0:
             raise ValueError('Error!: hyper parameters setting is invalid!')
-        return int(output_layer_h), int(output_layer_w), self.num_filters
+        return int(output_layer_h), int(output_layer_w)
 
     def forward(self, inputs: np.ndarray) -> np.ndarray:
         self.last_input: np.ndarray = inputs
