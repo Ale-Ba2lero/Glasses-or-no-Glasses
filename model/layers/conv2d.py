@@ -1,7 +1,5 @@
 from model.layers.layer import Layer, LayerType
 import numpy as np
-from tqdm import tqdm
-import time
 from model.utility import he_initialization
 
 
@@ -20,9 +18,6 @@ class Conv2D(Layer):
         self.d_filters = None
         self.d_biases = None
         self.last_input = None
-
-        self.f_time = 0
-        self.b_time = 0
 
     def setup(self, input_shape: tuple):
 
@@ -106,15 +101,12 @@ class Conv2D(Layer):
         batch_size: int = inputs.shape[0]
         output = np.zeros((batch_size,) + self.output_shape)
 
-        start = time.time()
         for img_region, i, j in self.iterate_regions(inputs, kernel=self.kernel_size, stride=self.stride):
             for b in range(batch_size):
                 depth = self.filters.shape[2] if len(self.filters.shape) == 4 else 1
                 flatten_image = img_region[b].flatten()
                 flatten_filters = self.filters.reshape((self.kernel_size ** 2) * depth, self.num_filters)
                 output[b, i, j] = np.dot(flatten_filters.T, flatten_image) + self.biases
-        end = time.time()
-        self.f_time += (end - start)
         return output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
@@ -122,7 +114,6 @@ class Conv2D(Layer):
         self.d_biases = np.zeros(self.num_filters)
         new_d_score = np.zeros(self.last_input.shape)
         # filters delta
-        start = time.time()
         batch_size = d_score.shape[0]
         for b in range(batch_size):
             self.d_biases = np.sum(d_score[b], axis=(0, 1))
@@ -140,7 +131,6 @@ class Conv2D(Layer):
                 self.d_filters += prod_
 
                 # Execute this only if there is another layer to propagate
-                # TODO sometimes it may be executed also if there is no other layer to propagate (fix?)
                 if len(self.filters.shape) == 4:
                     # Equivalent but slower
                     """for f in range(self.num_filters):
@@ -150,16 +140,8 @@ class Conv2D(Layer):
                     filters_flatten = self.filters.reshape(np.prod(self.filters.shape[:-1]), self.num_filters)
                     prod_ = (filters_flatten * d_score_flatten).reshape(self.filters.shape)
                     new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] += np.sum(prod_, axis=3)
-
-        end = time.time()
-        self.b_time += (end - start)
         return new_d_score
 
     def update(self, learn_rate: float = 1e-0) -> None:
         self.filters = self.filters + (-learn_rate * self.d_filters)
         self.biases = self.biases + (-learn_rate * self.biases)
-
-    def print_time(self):
-        print(f"f-time:{self.f_time} | b-time:{self.b_time}")
-        self.f_time = 0
-        self.b_time = 0
