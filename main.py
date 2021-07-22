@@ -31,11 +31,11 @@ directory = "./dataset/faces-spring-2020/faces-spring-2020/"
 train_ds = pd.read_csv(train_path)
 
 # for testing purposes we will select a subset of the whole dataset
-DATASET_SIZE = 200
-IMAGE_SIZE = 128
+DATASET_SIZE = 1
+IMAGE_SIZE = 1024
 
 labels = train_ds.iloc[:DATASET_SIZE, -1].to_numpy()
-
+d = None
 data = np.zeros((DATASET_SIZE, IMAGE_SIZE, IMAGE_SIZE, 3))
 for x in tqdm(range(DATASET_SIZE)):
     img_path = f'{directory}face-{x + 1}.png'
@@ -45,8 +45,22 @@ for x in tqdm(range(DATASET_SIZE)):
     img = (img - np.min(img)) / np.ptp(img)
     data[x] = img
 
+
+"""
+width, height = d.size  
+left = (width - width/3*2)/2
+top = (height - height/2)/2
+right = (width + width/3*2)/2
+bottom = (height + height/2)/2
+
+# Crop the center of the image
+d.crop((left, top, right, bottom)).show()
+"""
+
+
 plt.imshow(data[0])
 plt.show()
+
 # %%
 X_train, X_test, y_train, y_test = train_test_split(data,
                                                     labels,
