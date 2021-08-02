@@ -11,7 +11,6 @@ def he_initialization(units, shape=None):
 
 
 class Metrics:
-
     def __init__(self):
         self.history = {}
 

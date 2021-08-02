@@ -31,7 +31,7 @@ directory = "./dataset/faces-spring-2020/faces-spring-2020/"
 train_ds = pd.read_csv(train_path)
 
 # for testing purposes we will select a subset of the whole dataset
-DATASET_SIZE = 1
+DATASET_SIZE = 10
 IMAGE_SIZE = 1024
 
 labels = train_ds.iloc[:DATASET_SIZE, -1].to_numpy()
@@ -70,7 +70,7 @@ X_train, X_test, y_train, y_test = train_test_split(data,
 # ------------------------------------ HYPER PARAMETERS
 STEP_SIZE = 1e-2
 N_EPOCHS = 3
-BATCH_SIZE = len(X_train) // 10
+BATCH_SIZE = 5
 
 # ------------------------------------ BUILD THE MODEL
 nn = Model([
@@ -86,13 +86,32 @@ nn = Model([
 
 print("Model train")
 # ------------------------------------ FIT THE MODEL
-nn.train(X=X_train,
-         y=y_train,
+nn.train(dataset=X_train,
+         labels=y_train,
          epochs=N_EPOCHS,
          batch_size=BATCH_SIZE,
          step_size=STEP_SIZE)
 
 # ------------------------------------ EVALUTATE THE MODEL
-nn.evaluate(X_test=X_train, y_test=y_train, text="Train")
-nn.evaluate(X_test=X_test, y_test=y_test, text="Test")
+loss_train = nn.metrics.history['train_loss']
+loss_val = nn.metrics.history['val_loss']
+epochs = range(0, N_EPOCHS)
+plt.plot(epochs, loss_train, 'g', label='Training loss')
+plt.plot(epochs, loss_val, 'b', label='validation loss')
+plt.title('Training and Validation loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+
+loss_train = nn.metrics.history['train_acc']
+loss_val = nn.metrics.history['val_acc']
+epochs = range(0, N_EPOCHS)
+plt.plot(epochs, loss_train, 'g', label='Training accuracy')
+plt.plot(epochs, loss_val, 'b', label='validation accuracy')
+plt.title('Training and Validation accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
 

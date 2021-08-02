@@ -5,9 +5,8 @@ from sklearn.preprocessing import minmax_scale
 import matplotlib.pyplot as plt
 from model.loss import CategoricalCrossEntropy
 from model.layers.dense import Dense
-from model.layers.relu import ReLU
+from model.layers.relu import ReLU, LeakyReLU
 from model.layers.softmax import Softmax
-from model.layers.leakyReLU import LeakyReLU
 from model.model import Model
 
 
@@ -67,11 +66,10 @@ nn = Model([
 ], CategoricalCrossEntropy())
 
 # ------------------------------------ FIT THE MODEL
-nn.train(X=X_train,
-         y=y_train,
+nn.train(dataset=X_train,
+         labels=y_train,
          epochs=N_EPOCHS,
          batch_size=BATCH_SIZE,
          step_size=STEP_SIZE)
 
 # ------------------------------------ EVALUTATE THE MODEL
-nn.evaluate(X_test=X_test, y_test=y_test)
