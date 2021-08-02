@@ -29,7 +29,7 @@ train_ds = pd.read_csv(train_path)
 
 # for testing purposes we will select a subset of the whole dataset
 DATASET_SIZE = 10
-IMAGE_SIZE = 1024
+IMAGE_SIZE = 100
 
 labels = train_ds.iloc[:DATASET_SIZE, -1].to_numpy()
 d = None
