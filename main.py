@@ -23,11 +23,8 @@ Mini-Batch Gradient Descent. 1 < Batch Size < Size of Training Set
 '''
 
 # ------------------------------------ DATASET
-
-#np.seterr(all='raise')
-
-train_path = "./dataset/train.csv"
-directory = "./dataset/faces-spring-2020/faces-spring-2020/"
+train_path = "../train.csv"
+directory = "../faces-spring-2020/faces-spring-2020/"
 train_ds = pd.read_csv(train_path)
 
 # for testing purposes we will select a subset of the whole dataset
