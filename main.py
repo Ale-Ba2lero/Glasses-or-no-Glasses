@@ -22,6 +22,7 @@ Stochastic Gradient Descent. Batch Size = 1
 Mini-Batch Gradient Descent. 1 < Batch Size < Size of Training Set
 '''
 
+
 def main():
     # ------------------------------------ DATASET
     train_path = "../train.csv"
@@ -29,7 +30,7 @@ def main():
     train_ds = pd.read_csv(train_path)
 
     # for testing purposes we will select a subset of the whole dataset
-    DATASET_SIZE = 20
+    DATASET_SIZE = 100
     IMAGE_SIZE = 100
 
     labels = train_ds.iloc[:DATASET_SIZE, -1].to_numpy()
@@ -43,7 +44,7 @@ def main():
         img = (img - np.min(img)) / np.ptp(img)
         data[x] = img
 
-    #print('Min: %.3f, Max: %.3f' % (data.min(), data.max()))
+    # print('Min: %.3f, Max: %.3f' % (data.min(), data.max()))
     """
     width, height = d.size  
     left = (width - width/3*2)/2
@@ -89,7 +90,6 @@ def main():
              step_size=STEP_SIZE)
 
     # ------------------------------------ EVALUTATE THE MODEL
-
     train_loss = nn.metrics.history['train_loss']
     val_loss = nn.metrics.history['val_loss']
     epochs = range(0, N_EPOCHS)
@@ -100,6 +100,9 @@ def main():
     plt.ylabel('Loss')
     plt.legend()
     plt.show()
+
+    print(f"train loss: {train_loss}")
+    print(f"val loss: {val_loss}")
 
     train_acc = nn.metrics.history['train_acc']
     val_acc = nn.metrics.history['val_acc']
@@ -112,7 +115,8 @@ def main():
     plt.legend()
     plt.show()
 
-    #print(f"tl: {train_loss}\nvl: {val_loss}\nta: {train_acc}\nva: {val_acc}")
+    print(f"train acc: {train_acc}")
+    print(f"val acc: {val_acc}")
 
 
 if __name__ == "__main__":

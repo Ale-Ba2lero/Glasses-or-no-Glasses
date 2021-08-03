@@ -62,24 +62,30 @@ nn.train(dataset=ds_images,
          step_size=STEP_SIZE)
 
 # ------------------------------------ EVALUTATE THE MODEL
-loss_train = nn.metrics.history['train_loss']
-loss_val = nn.metrics.history['val_loss']
+train_loss = nn.metrics.history['train_loss']
+val_loss = nn.metrics.history['val_loss']
 epochs = range(0, N_EPOCHS)
-plt.plot(epochs, loss_train, 'g', label='Training loss')
-plt.plot(epochs, loss_val, 'b', label='validation loss')
+plt.plot(epochs, train_loss, 'g', label='Training loss')
+plt.plot(epochs, val_loss, 'b', label='validation loss')
 plt.title('Training and Validation loss')
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.legend()
 plt.show()
 
-loss_train = nn.metrics.history['train_acc']
-loss_val = nn.metrics.history['val_acc']
+print(f"train loss: {train_loss}")
+print(f"val loss: {val_loss}")
+
+train_acc = nn.metrics.history['train_acc']
+val_acc = nn.metrics.history['val_acc']
 epochs = range(0, N_EPOCHS)
-plt.plot(epochs, loss_train, 'g', label='Training accuracy')
-plt.plot(epochs, loss_val, 'b', label='validation accuracy')
+plt.plot(epochs, train_acc, 'g', label='Training accuracy')
+plt.plot(epochs, val_acc, 'b', label='validation accuracy')
 plt.title('Training and Validation accuracy')
 plt.xlabel('Epochs')
 plt.ylabel('Accuracy')
 plt.legend()
 plt.show()
+
+print(f"train acc: {train_acc}")
+print(f"val acc: {val_acc}")
