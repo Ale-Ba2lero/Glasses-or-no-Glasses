@@ -15,6 +15,7 @@ class Metrics:
         self.history = {}
 
     def update(self, loss, acc, dataset="train"):
+        print(loss, acc)
         key = dataset + "_loss"
         if key not in self.history:
             self.history[key] = []
