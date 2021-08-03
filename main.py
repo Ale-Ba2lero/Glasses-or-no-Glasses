@@ -21,8 +21,9 @@ Batch Gradient Descent. Batch Size = Size of Training Set
 Stochastic Gradient Descent. Batch Size = 1
 Mini-Batch Gradient Descent. 1 < Batch Size < Size of Training Set
 '''
-def main():
 
+
+def main():
     # ------------------------------------ DATASET
     train_path = "../train.csv"
     directory = "../faces-spring-2020/faces-spring-2020/"
@@ -89,10 +90,10 @@ def main():
              step_size=STEP_SIZE)
 
     # ------------------------------------ EVALUTATE THE MODEL
-    loss_train = nn.metrics.history['train_loss']
+    train_loss = nn.metrics.history['train_loss']
     val_loss = nn.metrics.history['val_loss']
     """epochs = range(0, N_EPOCHS)
-    plt.plot(epochs, loss_train, 'g', label='Training loss')
+    plt.plot(epochs, train_loss, 'g', label='Training loss')
     plt.plot(epochs, val_loss, 'b', label='validation loss')
     plt.title('Training and Validation loss')
     plt.xlabel('Epochs')
@@ -111,7 +112,7 @@ def main():
     plt.legend()
     plt.show()"""
 
-    return loss_train, val_loss, train_acc, val_acc
+    return train_loss, val_loss, train_acc, val_acc
 
 
 if __name__ == "__main__":
