@@ -22,7 +22,6 @@ Stochastic Gradient Descent. Batch Size = 1
 Mini-Batch Gradient Descent. 1 < Batch Size < Size of Training Set
 '''
 
-
 def main():
     # ------------------------------------ DATASET
     train_path = "../train.csv"
@@ -44,6 +43,7 @@ def main():
         img = (img - np.min(img)) / np.ptp(img)
         data[x] = img
 
+    #print('Min: %.3f, Max: %.3f' % (data.min(), data.max()))
     """
     width, height = d.size  
     left = (width - width/3*2)/2

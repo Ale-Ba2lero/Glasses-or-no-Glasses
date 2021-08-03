@@ -1,5 +1,5 @@
 from model.layers.layer import Layer, LayerType
-from model.utility import he_initialization
+from model.utility import xavier_initialization
 import numpy as np
 
 
@@ -18,7 +18,7 @@ class Dense(Layer):
         self.input_layer = None
 
     def setup(self, input_shape: int, next_layer: Layer = None) -> None:
-        self.W: np.ndarray = he_initialization(units=self.num_neurons, shape=(input_shape, self.num_neurons))
+        self.W: np.ndarray = xavier_initialization(units=self.num_neurons, shape=(input_shape, self.num_neurons))
         self.b: np.ndarray = np.zeros((1, self.num_neurons))
         self.next_layer: Layer = next_layer
         self.output_shape: int = self.num_neurons

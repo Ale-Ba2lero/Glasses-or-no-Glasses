@@ -2,11 +2,10 @@ import numpy as np
 from model.layers.layer import LayerType
 
 
-# Xavier initialization
-def he_initialization(units, shape=None):
+def xavier_initialization(units, shape=None):
     if shape is None:
         shape = units
-    stddev = np.sqrt(2 / np.prod(units))
+    stddev = np.sqrt(1 / np.prod(units))
     return np.random.normal(loc=0, scale=stddev, size=shape)
 
 
