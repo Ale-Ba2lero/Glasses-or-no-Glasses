@@ -64,11 +64,11 @@ class Model:
                 """
                 self.backward(d_score, step_size)
 
-            """train_loss, train_acc = self.metrics.evaluate_model(X_train, y_train, self.layers, self.loss_function)
+            train_loss, train_acc = self.metrics.evaluate_model(X_train, y_train, self.layers, self.loss_function)
             self.metrics.update(train_loss, train_acc, "train")
 
             eva_loss, eva_acc = self.metrics.evaluate_model(X_val, y_val, self.layers, self.loss_function)
-            self.metrics.update(eva_loss, eva_acc, "val")"""
+            self.metrics.update(eva_loss, eva_acc, "val")
 
             if self._callback:
                 self._callback()
