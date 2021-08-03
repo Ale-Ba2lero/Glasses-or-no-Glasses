@@ -64,17 +64,12 @@ class Model:
                 self.backward(d_score, step_size)
 
             train_loss, train_acc = self.metrics.evaluate_model(X_train, y_train, self.layers, self.loss_function)
-            #self.metrics.update(train_loss, train_acc, "train")
-
-            # self.metrics.metrics_log(train_loss, train_acc, text=f"Epoch {epoch+1} / {epochs}")
+            self.metrics.update(train_loss, train_acc, "train")
 
             eva_loss, eva_acc = self.metrics.evaluate_model(X_val, y_val, self.layers, self.loss_function)
-            #self.metrics.update(eva_loss, eva_acc, "val")
+            self.metrics.update(eva_loss, eva_acc, "val")
 
-        train_loss, train_acc = self.metrics.evaluate_model(X_train, y_train, self.layers, self.loss_function)
-        eva_loss, eva_acc = self.metrics.evaluate_model(X_val, y_val, self.layers, self.loss_function)
-
-        return train_loss, train_acc, eva_loss, eva_acc
+            # self.metrics.metrics_log(train_loss, train_acc, text=f"Epoch {epoch+1} / {epochs}")
 
     def forward(self, inputs):
         output = inputs

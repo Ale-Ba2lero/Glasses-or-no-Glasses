@@ -30,7 +30,7 @@ def main():
     train_ds = pd.read_csv(train_path)
 
     # for testing purposes we will select a subset of the whole dataset
-    DATASET_SIZE = 50
+    DATASET_SIZE = 20
     IMAGE_SIZE = 100
 
     labels = train_ds.iloc[:DATASET_SIZE, -1].to_numpy()
@@ -67,7 +67,7 @@ def main():
     # ------------------------------------ HYPER PARAMETERS
     STEP_SIZE = 1e-2
     N_EPOCHS = 3
-    BATCH_SIZE = 1
+    BATCH_SIZE = 5
 
     # ------------------------------------ BUILD THE MODEL
     nn = Model([
@@ -81,18 +81,18 @@ def main():
         Dense(2), Softmax()
     ], CategoricalCrossEntropy())
 
-    print("Model train")
-    # ------------------------------------ FIT THE MODEL
-    train_loss, val_loss, train_acc, val_acc = nn.train(dataset=X_train,
-                                                        labels=y_train,
-                                                        epochs=N_EPOCHS,
-                                                        batch_size=BATCH_SIZE,
-                                                        step_size=STEP_SIZE)
+    # ------------------------------------ TRAIN THE MODEL
+    nn.train(dataset=X_train,
+             labels=y_train,
+             epochs=N_EPOCHS,
+             batch_size=BATCH_SIZE,
+             step_size=STEP_SIZE)
 
     # ------------------------------------ EVALUTATE THE MODEL
-    """train_loss = nn.metrics.history['train_loss']
+
+    train_loss = nn.metrics.history['train_loss']
     val_loss = nn.metrics.history['val_loss']
-    epochs = range(0, N_EPOCHS)
+    """epochs = range(0, N_EPOCHS)
     plt.plot(epochs, train_loss, 'g', label='Training loss')
     plt.plot(epochs, val_loss, 'b', label='validation loss')
     plt.title('Training and Validation loss')
@@ -101,9 +101,9 @@ def main():
     plt.legend()
     plt.show()"""
 
-    """train_acc = nn.metrics.history['train_acc']
+    train_acc = nn.metrics.history['train_acc']
     val_acc = nn.metrics.history['val_acc']
-    epochs = range(0, N_EPOCHS)
+    """epochs = range(0, N_EPOCHS)
     plt.plot(epochs, train_acc, 'g', label='Training accuracy')
     plt.plot(epochs, val_acc, 'b', label='validation accuracy')
     plt.title('Training and Validation accuracy')
@@ -111,8 +111,9 @@ def main():
     plt.ylabel('Accuracy')
     plt.legend()
     plt.show()"""
-    return train_loss, val_loss, train_acc, val_acc
+
+    print(f"tl: {train_loss}\nvl: {val_loss}\nta: {train_acc}\nva: {val_acc}")
 
 
 if __name__ == "__main__":
-    print(main())
+    main()

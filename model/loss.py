@@ -24,7 +24,6 @@ class Loss(abc.ABC):
 
 
 class CategoricalCrossEntropy(Loss):
-
     def forward(self, y_pred: np.ndarray, y_true: np.ndarray) -> (float, float):
         self.y_pred: np.ndarray = y_pred
         self.y_true: np.ndarray = y_true
