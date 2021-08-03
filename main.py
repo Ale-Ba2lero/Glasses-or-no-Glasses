@@ -89,10 +89,10 @@ def main():
              step_size=STEP_SIZE)
 
     # ------------------------------------ EVALUTATE THE MODEL
-
-    train_loss = nn.metrics.history['train_loss']
+    print(nn.metrics.evaluate_model(X_test, y_test, nn.layers, nn.loss_function))
+    """train_loss = nn.metrics.history['train_loss']
     val_loss = nn.metrics.history['val_loss']
-    """epochs = range(0, N_EPOCHS)
+    epochs = range(0, N_EPOCHS)
     plt.plot(epochs, train_loss, 'g', label='Training loss')
     plt.plot(epochs, val_loss, 'b', label='validation loss')
     plt.title('Training and Validation loss')
@@ -101,9 +101,9 @@ def main():
     plt.legend()
     plt.show()"""
 
-    train_acc = nn.metrics.history['train_acc']
+    """train_acc = nn.metrics.history['train_acc']
     val_acc = nn.metrics.history['val_acc']
-    """epochs = range(0, N_EPOCHS)
+    epochs = range(0, N_EPOCHS)
     plt.plot(epochs, train_acc, 'g', label='Training accuracy')
     plt.plot(epochs, val_acc, 'b', label='validation accuracy')
     plt.title('Training and Validation accuracy')
@@ -112,7 +112,7 @@ def main():
     plt.legend()
     plt.show()"""
 
-    print(f"tl: {train_loss}\nvl: {val_loss}\nta: {train_acc}\nva: {val_acc}")
+    #print(f"tl: {train_loss}\nvl: {val_loss}\nta: {train_acc}\nva: {val_acc}")
 
 
 if __name__ == "__main__":

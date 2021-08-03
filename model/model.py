@@ -8,10 +8,11 @@ from tqdm import tqdm
 
 
 class Model:
-    def __init__(self, layers: list, loss_function: Loss = CategoricalCrossEntropy()) -> None:
+    def __init__(self, layers: list, loss_function: Loss = CategoricalCrossEntropy(), _callback=None) -> None:
         self.layers = layers
         self.loss_function = loss_function
         self.metrics = None
+        self._callback = _callback
 
     def train(self,
               dataset: np.ndarray,
@@ -63,11 +64,14 @@ class Model:
                 """
                 self.backward(d_score, step_size)
 
-            train_loss, train_acc = self.metrics.evaluate_model(X_train, y_train, self.layers, self.loss_function)
+            """train_loss, train_acc = self.metrics.evaluate_model(X_train, y_train, self.layers, self.loss_function)
             self.metrics.update(train_loss, train_acc, "train")
 
             eva_loss, eva_acc = self.metrics.evaluate_model(X_val, y_val, self.layers, self.loss_function)
-            self.metrics.update(eva_loss, eva_acc, "val")
+            self.metrics.update(eva_loss, eva_acc, "val")"""
+
+            if self._callback:
+                self._callback()
 
             # self.metrics.metrics_log(train_loss, train_acc, text=f"Epoch {epoch+1} / {epochs}")
 
