@@ -11,7 +11,7 @@ class Model:
     def __init__(self, layers: list, loss_function: Loss = CategoricalCrossEntropy(), _callback=None) -> None:
         self.layers = layers
         self.loss_function = loss_function
-        self.metrics = None
+        self.metrics = Metrics()
         self._callback = _callback
 
     def train(self,
@@ -20,8 +20,6 @@ class Model:
               epochs: int = 1,
               batch_size: int = 1,
               step_size: float = 1e-2):
-
-        self.metrics = Metrics()
 
         X_train, X_val, y_train, y_val = train_test_split(dataset,
                                                           labels,
@@ -37,8 +35,7 @@ class Model:
         print(f'batch size: {batch_size}')
         print(f'batches: {n_batches}\nextra batch: {extra_batch}\n')
 
-        for layer_idx in range(len(self.layers)):
-            self.layer_setup(self.layers[layer_idx], layer_idx, dataset[0].shape)
+        self.layer_setup(dataset[0].shape)
 
         for epoch in range(epochs):
             """
@@ -62,16 +59,14 @@ class Model:
                 l += loss
                 num_correct += acc
                 """
-                self.backward(d_score, step_size)
+                self.backward(d_score)
+                self.weights_update(step_size)
 
             train_loss, train_acc = self.metrics.evaluate_model(X_train, y_train, self.layers, self.loss_function)
             self.metrics.update(train_loss, train_acc, "train")
 
             eva_loss, eva_acc = self.metrics.evaluate_model(X_val, y_val, self.layers, self.loss_function)
             self.metrics.update(eva_loss, eva_acc, "val")
-
-            if self._callback:
-                self._callback()
 
             # self.metrics.metrics_log(train_loss, train_acc, text=f"Epoch {epoch+1} / {epochs}")
 
@@ -81,29 +76,32 @@ class Model:
             output = layer.forward(output)
         return output
 
-    def backward(self, d_score, step_size):
+    def backward(self, d_score):
         for layer in reversed(self.layers):
             d_score = layer.backpropagation(d_score=d_score)
 
+    def weights_update(self, step_size):
         # layer update
         for layer in self.layers:
             if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
                 layer.update(step_size)
 
-    def layer_setup(self, layer: Layer, layer_idx: int, input_shape: tuple):
-        layer.id_ = layer_idx
-        if layer.layer_type == LayerType.DENSE:
-            if layer_idx == 0:
-                self.layers[layer_idx].setup(input_shape=input_shape[0], next_layer=self.layers[layer_idx + 1])
-            else:
-                dense_input_shape = self.layers[layer_idx - 1].output_shape
-                if type(self.layers[layer_idx - 1].output_shape) == tuple:
-                    dense_input_shape = dense_input_shape[0]
-                if layer_idx == len(self.layers) - 1:
-                    self.layers[layer_idx].setup(input_shape=dense_input_shape)
+    def layer_setup(self, input_shape: tuple):
+        for layer_idx in range(len(self.layers)):
+            self.layers[layer_idx].id_ = layer_idx
+            if self.layers[layer_idx].layer_type == LayerType.DENSE:
+                if layer_idx == 0:
+                    self.layers[layer_idx].setup(input_shape=input_shape[0], next_layer=self.layers[layer_idx + 1])
                 else:
-                    self.layers[layer_idx].setup(input_shape=dense_input_shape, next_layer=self.layers[layer_idx + 1])
-        elif layer.layer_type == LayerType.CONV and layer_idx == 0:
-            self.layers[layer_idx].setup(input_shape=input_shape)
-        else:
-            self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
+                    dense_input_shape = self.layers[layer_idx - 1].output_shape
+                    if type(self.layers[layer_idx - 1].output_shape) == tuple:
+                        dense_input_shape = dense_input_shape[0]
+                    if layer_idx == len(self.layers) - 1:
+                        self.layers[layer_idx].setup(input_shape=dense_input_shape)
+                    else:
+                        self.layers[layer_idx].setup(input_shape=dense_input_shape, next_layer=self.layers[layer_idx + 1])
+            elif self.layers[layer_idx].layer_type == LayerType.CONV and layer_idx == 0:
+                self.layers[layer_idx].setup(input_shape=input_shape)
+            else:
+                self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
+
