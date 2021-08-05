@@ -13,6 +13,7 @@ class NeuralNetwork:
         self.loss_function = loss_function
         self.metrics = Metrics()
         self._callback = _callback
+        self.delta_shape = 0
 
     def train(self,
               dataset: np.ndarray,
@@ -94,6 +95,8 @@ class NeuralNetwork:
         return deltas
 
     def layer_setup(self, input_shape: tuple):
+        ds = 0
+
         for layer_idx in range(len(self.layers)):
             self.layers[layer_idx].id_ = layer_idx
             if self.layers[layer_idx].layer_type == LayerType.DENSE:
@@ -106,9 +109,15 @@ class NeuralNetwork:
                     if layer_idx == len(self.layers) - 1:
                         self.layers[layer_idx].setup(input_shape=dense_input_shape)
                     else:
-                        self.layers[layer_idx].setup(input_shape=dense_input_shape, next_layer=self.layers[layer_idx + 1])
+                        self.layers[layer_idx].setup(input_shape=dense_input_shape,
+                                                     next_layer=self.layers[layer_idx + 1])
             elif self.layers[layer_idx].layer_type == LayerType.CONV and layer_idx == 0:
                 self.layers[layer_idx].setup(input_shape=input_shape)
             else:
                 self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
 
+            if self.layers[layer_idx].layer_type == LayerType.DENSE or \
+                    self.layers[layer_idx].layer_type == LayerType.CONV:
+                ds += 1
+
+        self.delta_shape = (ds, 2)
