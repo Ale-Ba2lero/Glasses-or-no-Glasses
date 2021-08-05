@@ -1,13 +1,13 @@
-from layers.conv2d import Conv2D
-from layers.dense import Dense
-from layers.maxpool2d import MaxPool2D
-from layers.flatten import Flatten
-from layers.relu import LeakyReLU
-from layers.softmax import Softmax
-from layers.dropout import Dropout
-from loss import CategoricalCrossEntropy
+from model.layers.conv2d import Conv2D
+from model.layers.dense import Dense
+from model.layers.maxpool2d import MaxPool2D
+from model.layers.flatten import Flatten
+from model.layers.relu import LeakyReLU
+from model.layers.softmax import Softmax
+from model.layers.dropout import Dropout
+from model.loss import CategoricalCrossEntropy
 import matplotlib.pyplot as plt
-from neural_network import NeuralNetwork
+from model.neural_network import NeuralNetwork
 
 import idx2numpy
 

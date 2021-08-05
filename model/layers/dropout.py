@@ -1,6 +1,6 @@
 import numpy as np
 
-from layers.layer import Layer, LayerType
+from model.layers.layer import Layer, LayerType
 
 
 class Dropout(Layer):

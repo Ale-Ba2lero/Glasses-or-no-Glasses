@@ -1,5 +1,5 @@
-from layers.layer import Layer, LayerType
-from utility import xavier_initialization
+from model.layers.layer import Layer, LayerType
+from model.utility import xavier_initialization
 import numpy as np
 
 

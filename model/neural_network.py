@@ -1,6 +1,6 @@
-from loss import CategoricalCrossEntropy, Loss
-from layers.layer import LayerType
-from utility import Metrics
+from model.loss import CategoricalCrossEntropy, Loss
+from model.layers.layer import LayerType
+from model.utility import Metrics
 
 from sklearn.model_selection import train_test_split
 import numpy as np

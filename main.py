@@ -5,15 +5,15 @@ import pandas as pd
 from tqdm import tqdm
 from PIL import Image
 
-from loss import CategoricalCrossEntropy
-from layers.conv2d import Conv2D
-from layers.dense import Dense
-from layers.maxpool2d import MaxPool2D
-from layers.flatten import Flatten
-from layers.relu import LeakyReLU
-from layers.softmax import Softmax
-from layers.dropout import Dropout
-from neural_network import NeuralNetwork
+from model.loss import CategoricalCrossEntropy
+from model.neural_network import NeuralNetwork
+from model.layers.conv2d import Conv2D
+from model.layers.dense import Dense
+from model.layers.maxpool2d import MaxPool2D
+from model.layers.flatten import Flatten
+from model.layers.relu import LeakyReLU
+from model.layers.softmax import Softmax
+from model.layers.dropout import Dropout
 import matplotlib.pyplot as plt
 
 '''
