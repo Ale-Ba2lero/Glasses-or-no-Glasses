@@ -15,6 +15,9 @@ class Model:
         self._callback = _callback
         self.upup = 0
 
+    def get_upup(self):
+        return self.upup
+
     def train(self,
               dataset: np.ndarray,
               labels: np.ndarray,
