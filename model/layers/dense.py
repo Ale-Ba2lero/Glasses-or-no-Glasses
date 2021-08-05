@@ -38,3 +38,6 @@ class Dense(Layer):
     def update(self, step_size: float = 1e-0) -> None:
         self.W += -step_size * self.dW
         self.b += -step_size * self.db
+
+    def get_deltas(self):
+        return self.dW, self.db

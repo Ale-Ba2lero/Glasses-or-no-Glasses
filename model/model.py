@@ -13,10 +13,6 @@ class Model:
         self.loss_function = loss_function
         self.metrics = Metrics()
         self._callback = _callback
-        self.upup = 0
-
-    def get_upup(self):
-        return self.upup
 
     def train(self,
               dataset: np.ndarray,
@@ -83,13 +79,18 @@ class Model:
     def backward(self, d_score):
         for layer in reversed(self.layers):
             d_score = layer.backpropagation(d_score=d_score)
-            self.upup += 1
 
     def weights_update(self, step_size):
         # layer update
         for layer in self.layers:
             if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
                 layer.update(step_size)
+
+    def get_layers_delta(self):
+        deltas = []
+        for layer in self.layers:
+            if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
+                deltas.append(layer.get_deltas())
 
     def layer_setup(self, input_shape: tuple):
         for layer_idx in range(len(self.layers)):

@@ -145,3 +145,6 @@ class Conv2D(Layer):
     def update(self, learn_rate: float = 1e-0) -> None:
         self.filters = self.filters + (-learn_rate * self.d_filters)
         self.biases = self.biases + (-learn_rate * self.biases)
+
+    def get_deltas(self):
+        return self.d_filters, self.d_biases
