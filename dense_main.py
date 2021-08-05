@@ -7,7 +7,7 @@ from model.loss import CategoricalCrossEntropy
 from model.layers.dense import Dense
 from model.layers.relu import ReLU, LeakyReLU
 from model.layers.softmax import Softmax
-from model.model import Model
+from model.neural_network import NeuralNetwork
 
 
 # np.seterr(all='raise')
@@ -58,7 +58,7 @@ N_EPOCHS = 10
 BATCH_SIZE = len(X_train)
 
 # ------------------------------------ BUILD THE MODEL
-nn = Model([
+nn = NeuralNetwork([
     Dense(200), LeakyReLU(),
     Dense(100), LeakyReLU(),
     Dense(50), LeakyReLU(),

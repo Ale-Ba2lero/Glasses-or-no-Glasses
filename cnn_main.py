@@ -13,7 +13,7 @@ import pandas as pd
 from tqdm import tqdm
 from PIL import Image
 import matplotlib.pyplot as plt
-from model.model import Model
+from model.neural_network import NeuralNetwork
 
 import idx2numpy
 
@@ -46,7 +46,7 @@ N_EPOCHS = 10
 BATCH_SIZE = 32
 
 # ------------------------------------ BUILD THE MODEL
-nn = Model([
+nn = NeuralNetwork([
     Conv2D(num_filters=10, kernel_size=3, padding=1), LeakyReLU(), MaxPool2D(),
     Conv2D(num_filters=8, kernel_size=3, padding=1), LeakyReLU(), MaxPool2D(),
     Flatten(),

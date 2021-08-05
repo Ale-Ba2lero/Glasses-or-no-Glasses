@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 
 
-class Model:
+class NeuralNetwork:
     def __init__(self, layers: list, loss_function: Loss = CategoricalCrossEntropy(), _callback=None) -> None:
         self.layers = layers
         self.loss_function = loss_function

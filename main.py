@@ -13,7 +13,7 @@ from model.layers.flatten import Flatten
 from model.layers.relu import ReLU, LeakyReLU
 from model.layers.softmax import Softmax
 from model.layers.dropout import Dropout
-from model.model import Model
+from model.neural_network import NeuralNetwork
 import matplotlib.pyplot as plt
 
 '''
@@ -71,7 +71,7 @@ def main():
     BATCH_SIZE = 5
 
     # ------------------------------------ BUILD THE MODEL
-    nn = Model([
+    nn = NeuralNetwork([
         Conv2D(num_filters=24, kernel_size=3, padding=1), LeakyReLU(),
         MaxPool2D(),
         Conv2D(num_filters=8, kernel_size=3, padding=1), LeakyReLU(),
