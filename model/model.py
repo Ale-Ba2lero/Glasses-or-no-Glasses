@@ -91,6 +91,7 @@ class Model:
         for layer in self.layers:
             if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
                 deltas.append(layer.get_deltas())
+        return deltas
 
     def layer_setup(self, input_shape: tuple):
         for layer_idx in range(len(self.layers)):
