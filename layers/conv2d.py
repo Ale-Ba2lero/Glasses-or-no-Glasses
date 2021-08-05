@@ -1,6 +1,6 @@
-from model.layers.layer import Layer, LayerType
+from layers.layer import Layer, LayerType
 import numpy as np
-from model.utility import xavier_initialization
+from utility import xavier_initialization
 
 
 class Conv2D(Layer):

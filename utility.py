@@ -1,5 +1,5 @@
 import numpy as np
-from model.layers.layer import LayerType
+from layers.layer import LayerType
 
 
 def xavier_initialization(units, shape=None):

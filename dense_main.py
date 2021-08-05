@@ -2,12 +2,11 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import minmax_scale
 
-import matplotlib.pyplot as plt
-from model.loss import CategoricalCrossEntropy
-from model.layers.dense import Dense
-from model.layers.relu import ReLU, LeakyReLU
-from model.layers.softmax import Softmax
-from model.neural_network import NeuralNetwork
+from loss import CategoricalCrossEntropy
+from layers.dense import Dense
+from layers.relu import LeakyReLU
+from layers.softmax import Softmax
+from neural_network import NeuralNetwork
 
 
 # np.seterr(all='raise')

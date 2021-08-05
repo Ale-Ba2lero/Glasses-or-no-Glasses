@@ -1,4 +1,4 @@
-from model.layers.layer import Layer, LayerType
+from layers.layer import Layer, LayerType
 import numpy as np
 
 
