@@ -13,6 +13,7 @@ class Model:
         self.loss_function = loss_function
         self.metrics = Metrics()
         self._callback = _callback
+        self.upup = 0
 
     def train(self,
               dataset: np.ndarray,
@@ -79,6 +80,7 @@ class Model:
     def backward(self, d_score):
         for layer in reversed(self.layers):
             d_score = layer.backpropagation(d_score=d_score)
+            self.upup += 1
 
     def weights_update(self, step_size):
         # layer update
