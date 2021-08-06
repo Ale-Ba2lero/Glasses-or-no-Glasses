@@ -97,8 +97,8 @@ class NeuralNetwork:
         i = 0
         for layer in self.layers:
             if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
-                i += 1
                 layer.set_deltas(deltas[i][0], deltas[i][1])
+                i += 1
 
     def layer_setup(self, input_shape: tuple):
         for layer_idx in range(len(self.layers)):
