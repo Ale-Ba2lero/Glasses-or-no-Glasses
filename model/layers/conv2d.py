@@ -150,5 +150,5 @@ class Conv2D(Layer):
         return self.d_filters, self.d_biases
 
     def set_deltas(self, dW, db):
-        self.filters = dW
+        self.d_filters = dW
         self.d_biases = db
