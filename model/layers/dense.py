@@ -42,4 +42,8 @@ class Dense(Layer):
     def get_deltas(self):
         return self.dW, self.db
 
+    def set_deltas(self, dW, db):
+        self.dW = dW
+        self.db = db
+
 
