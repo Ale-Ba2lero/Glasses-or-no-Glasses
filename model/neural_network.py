@@ -55,6 +55,8 @@ class NeuralNetwork:
 
                 output = self.forward(X_batch)
                 _, _, d_score = self.loss_function.calculate(output, y_batch)
+
+
                 """
                 l += loss
                 num_correct += acc
@@ -84,7 +86,7 @@ class NeuralNetwork:
         # layer update
         for layer in self.layers:
             if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
-                layer.update(step_size)
+                layer.update(step_size, 0.5)
 
     def get_layers_delta(self):
         deltas = []

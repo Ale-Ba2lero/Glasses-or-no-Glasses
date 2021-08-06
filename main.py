@@ -68,7 +68,7 @@ def main():
     # ------------------------------------ HYPER PARAMETERS
     STEP_SIZE = 1e-2
     N_EPOCHS = 3
-    BATCH_SIZE = 5
+    BATCH_SIZE = 10
 
     # ------------------------------------ BUILD THE MODEL
     nn = NeuralNetwork([

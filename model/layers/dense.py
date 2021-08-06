@@ -35,7 +35,11 @@ class Dense(Layer):
         d_score = np.dot(d_score, self.W.T)
         return d_score
 
-    def update(self, step_size: float = 1e-0) -> None:
+    def update(self, step_size: float = 1e-0, clip=None) -> None:
+        if clip is not None:
+            self.dW = np.clip(self.dW, -clip, clip)
+            self.db = np.clip(self.db, -clip, clip)
+
         self.W += -step_size * self.dW
         self.b += -step_size * self.db
 
@@ -45,5 +49,3 @@ class Dense(Layer):
     def set_deltas(self, dW, db):
         self.dW = dW
         self.db = db
-
-

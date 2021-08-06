@@ -142,9 +142,13 @@ class Conv2D(Layer):
                     new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] += np.sum(prod_, axis=3)
         return new_d_score
 
-    def update(self, learn_rate: float = 1e-0) -> None:
+    def update(self, learn_rate: float = 1e-0, clip=None) -> None:
+        if clip is not None:
+            self.d_filters = np.clip(self.d_filters, -clip, clip)
+            self.d_biases = np.clip(self.d_biases, -clip, clip)
+
         self.filters = self.filters + (-learn_rate * self.d_filters)
-        self.biases = self.biases + (-learn_rate * self.biases)
+        self.biases = self.biases + (-learn_rate * self.d_biases)
 
     def get_deltas(self):
         return self.d_filters, self.d_biases
