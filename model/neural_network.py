@@ -41,7 +41,7 @@ class NeuralNetwork:
             """
             l, loss, num_correct, acc=0
             """
-            for j in tqdm(range(n_batches + extra_batch)):
+            for j in range(n_batches + extra_batch):
                 """
                 if j > 0 and j % 100 == 99:
                     print_loss = "{:.2}".format(l / 100)

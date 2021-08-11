@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import minmax_scale
+import matplotlib.pyplot as plt
 
 from model.loss import CategoricalCrossEntropy
 from model.layers.dense import Dense
@@ -22,8 +23,6 @@ def spiral_data(points, classes):
         X[ix] = np.c_[r * np.sin(t * 2.5), r * np.cos(t * 2.5)]
         y[ix] = class_number
     return X, y
-
-
 '''
 Batch Gradient Descent. Batch Size = Size of Training Set
 Stochastic Gradient Descent. Batch Size = 1
@@ -46,15 +45,15 @@ print('Min: %.3f, Max: %.3f' % (X.min(), X.max()))
 # plt.show()
 
 # ------------------------------------ SPLIT DATA
-X_train, X_test, y_train, y_test = train_test_split(X,
+"""X_train, X_test, y_train, y_test = train_test_split(X,
                                                     y,
-                                                    test_size=0.10,
-                                                    random_state=65)
+                                                    test_size=0.1,
+                                                    random_state=65)"""
 
 # ------------------------------------ HYPER PARAMETERS
 STEP_SIZE = 1e-1
-N_EPOCHS = 10
-BATCH_SIZE = len(X_train)
+N_EPOCHS = 2000
+BATCH_SIZE = 32
 
 # ------------------------------------ BUILD THE MODEL
 nn = NeuralNetwork([
@@ -65,10 +64,37 @@ nn = NeuralNetwork([
 ], CategoricalCrossEntropy())
 
 # ------------------------------------ FIT THE MODEL
-nn.train(dataset=X_train,
-         labels=y_train,
+nn.train(dataset=X,
+         labels=y,
          epochs=N_EPOCHS,
          batch_size=BATCH_SIZE,
          step_size=STEP_SIZE)
 
-# ------------------------------------ EVALUTATE THE MODEL
+# ------------------------------------ EVALUATE THE MODEL
+train_loss = nn.metrics.history['train_loss']
+val_loss = nn.metrics.history['val_loss']
+epochs = range(0, N_EPOCHS)
+plt.plot(epochs, train_loss, 'g', label='Training loss')
+plt.plot(epochs, val_loss, 'b', label='validation loss')
+plt.title('Training and Validation loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
+plt.show()
+
+print(f"train loss: {train_loss}")
+print(f"val loss: {val_loss}")
+
+train_acc = nn.metrics.history['train_acc']
+val_acc = nn.metrics.history['val_acc']
+epochs = range(0, N_EPOCHS)
+plt.plot(epochs, train_acc, 'g', label='Training accuracy')
+plt.plot(epochs, val_acc, 'b', label='validation accuracy')
+plt.title('Training and Validation accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
+
+print(f"train acc: {train_acc}")
+print(f"val acc: {val_acc}")
