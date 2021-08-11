@@ -13,10 +13,10 @@ class Conv2D(Layer):
         self.stride: int = stride
         self.layer_type: LayerType = LayerType.CONV
 
-        self.filters = None
-        self.biases = None
-        self.d_filters = None
-        self.d_biases = None
+        self.W = None
+        self.b = None
+        self.dW = None
+        self.db = None
         self.last_input = None
 
     def setup(self, input_shape: tuple):
@@ -29,13 +29,13 @@ class Conv2D(Layer):
 
         if len(input_shape) == 2:
             filters_shape = (self.kernel_size, self.kernel_size, self.num_filters)
-            self.filters: np.ndarray = xavier_initialization(units=filters_shape)
+            self.W: np.ndarray = xavier_initialization(units=filters_shape)
 
         elif len(input_shape) == 3:
             filters_shape = (self.kernel_size, self.kernel_size, self.input_shape[2], self.num_filters)
-            self.filters: np.ndarray = xavier_initialization(units=filters_shape)
+            self.W: np.ndarray = xavier_initialization(units=filters_shape)
 
-        self.biases = np.zeros((1, self.num_filters))
+        self.b = np.zeros((1, self.num_filters))
 
     @staticmethod
     def iterate_regions(inputs: np.ndarray, kernel: int = 3, stride: int = 1) -> (
@@ -103,20 +103,20 @@ class Conv2D(Layer):
 
         for img_region, i, j in self.iterate_regions(inputs, kernel=self.kernel_size, stride=self.stride):
             for b in range(batch_size):
-                depth = self.filters.shape[2] if len(self.filters.shape) == 4 else 1
+                depth = self.W.shape[2] if len(self.W.shape) == 4 else 1
                 flatten_image = img_region[b].flatten()
-                flatten_filters = self.filters.reshape((self.kernel_size ** 2) * depth, self.num_filters)
-                output[b, i, j] = np.dot(flatten_filters.T, flatten_image) + self.biases
+                flatten_filters = self.W.reshape((self.kernel_size ** 2) * depth, self.num_filters)
+                output[b, i, j] = np.dot(flatten_filters.T, flatten_image) + self.b
         return output
 
     def backpropagation(self, d_score: np.ndarray) -> np.ndarray:
-        self.d_filters = np.zeros(self.filters.shape)
-        self.d_biases = np.zeros(self.num_filters)
+        self.dW = np.zeros(self.W.shape)
+        self.db = np.zeros(self.num_filters)
         new_d_score = np.zeros(self.last_input.shape)
         # filters delta
         batch_size = d_score.shape[0]
         for b in range(batch_size):
-            self.d_biases = np.sum(d_score[b], axis=(0, 1))
+            self.db = np.sum(d_score[b], axis=(0, 1))
             for img_region, i, j in self.iterate_regions(self.last_input, kernel=self.kernel_size, stride=self.stride):
                 # Equivalent but slower
                 """for f in range(self.num_filters):
@@ -127,32 +127,35 @@ class Conv2D(Layer):
                 d_score_flatten = d_score[b, i, j].flatten()
                 img_region_flatten = np.tile(img_region[b].flatten(), (self.num_filters, 1))
                 prod_ = (img_region_flatten.T * d_score_flatten)
-                prod_ = prod_.reshape(self.d_filters.shape)
-                self.d_filters += prod_
+                prod_ = prod_.reshape(self.dW.shape)
+                self.dW += prod_
 
                 # Execute this only if there is another layer to propagate
-                if len(self.filters.shape) == 4:
+                if len(self.W.shape) == 4:
                     # Equivalent but slower
                     """for f in range(self.num_filters):
                         new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] += \
                             d_score[b, i, j, f] * self.filters[:, :, :, f]"""
                     d_score_flatten = d_score[b, i, j].flatten()
-                    filters_flatten = self.filters.reshape(np.prod(self.filters.shape[:-1]), self.num_filters)
-                    prod_ = (filters_flatten * d_score_flatten).reshape(self.filters.shape)
+                    filters_flatten = self.W.reshape(np.prod(self.W.shape[:-1]), self.num_filters)
+                    prod_ = (filters_flatten * d_score_flatten).reshape(self.W.shape)
                     new_d_score[b, i:i + self.kernel_size, j:j + self.kernel_size] += np.sum(prod_, axis=3)
         return new_d_score
 
     def update(self, learn_rate: float = 1e-0, clip=None) -> None:
         if clip is not None:
-            self.d_filters = np.clip(self.d_filters, -clip, clip)
-            self.d_biases = np.clip(self.d_biases, -clip, clip)
+            self.dW = np.clip(self.dW, -clip, clip)
+            self.db = np.clip(self.db, -clip, clip)
 
-        self.filters = self.filters + (-learn_rate * self.d_filters)
-        self.biases = self.biases + (-learn_rate * self.d_biases)
+        self.W = self.W + (-learn_rate * self.dW)
+        self.b = self.b + (-learn_rate * self.db)
+
+    def get_weights(self):
+        return self.W, self.b
 
     def get_deltas(self):
-        return self.d_filters, self.d_biases
+        return self.dW, self.db
 
     def set_deltas(self, dW, db):
-        self.d_filters = dW
-        self.d_biases = db
+        self.dW = dW
+        self.db = db

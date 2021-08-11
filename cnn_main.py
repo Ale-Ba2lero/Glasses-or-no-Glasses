@@ -16,13 +16,13 @@ plt.imshow(data[0])
 plt.show()
 """
 
-train_images_file = 'examples/cnn/dataset/train-images.idx3-ubyte'
-train_labels_file = 'examples/cnn/dataset/train-labels.idx1-ubyte'
+train_images_file = 'dataset/train-images.idx3-ubyte'
+train_labels_file = 'dataset/train-labels.idx1-ubyte'
 
 train_images = idx2numpy.convert_from_file(train_images_file)
 train_labels = idx2numpy.convert_from_file(train_labels_file)
 
-DATASET_SIZE = 4000
+DATASET_SIZE = 400
 
 ds_images = train_images[:DATASET_SIZE]
 ds_labels = train_labels[:DATASET_SIZE]
@@ -36,7 +36,7 @@ ds_images /= 255.0
                                                     test_size=0.1,
                                                     random_state=6)"""
 STEP_SIZE = 1e-2
-N_EPOCHS = 10
+N_EPOCHS = 3
 BATCH_SIZE = 32
 
 # ------------------------------------ BUILD THE MODEL
@@ -55,7 +55,7 @@ nn.train(dataset=ds_images,
          batch_size=BATCH_SIZE,
          step_size=STEP_SIZE)
 
-# ------------------------------------ EVALUTATE THE MODEL
+# ------------------------------------ EVALUATE THE MODEL
 train_loss = nn.metrics.history['train_loss']
 val_loss = nn.metrics.history['val_loss']
 epochs = range(0, N_EPOCHS)

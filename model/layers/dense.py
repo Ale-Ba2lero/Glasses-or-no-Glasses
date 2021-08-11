@@ -43,6 +43,9 @@ class Dense(Layer):
         self.W += -step_size * self.dW
         self.b += -step_size * self.db
 
+    def get_weights(self):
+        return self.W, self.b
+
     def get_deltas(self):
         return self.dW, self.db
 
