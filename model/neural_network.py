@@ -88,11 +88,11 @@ class NeuralNetwork:
                 layer.update(step_size, 0.5)
 
     def get_network_weights(self):
-        W = []
+        W = {}
         for layer in self.layers:
             if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
-                W.append(layer.get_deltas())
-        return np.array(W)
+                W[layer.id_] = layer.get_weights()
+        return W
 
     def get_layers_delta(self):
         deltas = {}
@@ -100,6 +100,12 @@ class NeuralNetwork:
             if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
                 deltas[layer.id_] = layer.get_deltas()
         return deltas
+
+    def set_network_weights(self, weights):
+        for w in weights:
+            for layer in self.layers:
+                if layer.id_ == w:
+                    layer.set_deltas(weights[w][0], weights[w][1])
 
     def set_layers_delta(self, deltas):
         for d in deltas:
