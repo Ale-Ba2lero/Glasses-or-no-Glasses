@@ -56,7 +56,6 @@ class NeuralNetwork:
                 output = self.forward(X_batch)
                 _, _, d_score = self.loss_function.calculate(output, y_batch)
 
-
                 """
                 l += loss
                 num_correct += acc
@@ -96,38 +95,33 @@ class NeuralNetwork:
         return np.array(W)
 
     def get_layers_delta(self):
-        deltas = []
+        deltas = {}
         for layer in self.layers:
             if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
-                deltas.append(layer.get_deltas())
-        return np.array(deltas)
+                deltas[layer.id_] = layer.get_deltas()
+        return deltas
 
     def set_layers_delta(self, deltas):
-        i = 0
-        for layer in self.layers:
-            if layer.layer_type == LayerType.CONV or layer.layer_type == LayerType.DENSE:
-                layer.set_deltas(deltas[i][0], deltas[i][1])
-                i += 1
+        for d in deltas:
+            for layer in self.layers:
+                if layer.id_ == d:
+                    layer.set_deltas(deltas[d][0], deltas[d][1])
 
     def layer_setup(self, input_shape: tuple):
-        for layer_idx in range(len(self.layers)):
-            self.layers[layer_idx].id_ = layer_idx
-            if self.layers[layer_idx].layer_type == LayerType.DENSE:
-                if layer_idx == 0:
-                    self.layers[layer_idx].setup(input_shape=input_shape[0], next_layer=self.layers[layer_idx + 1])
+        for idx in range(len(self.layers)):
+            self.layers[idx].id_ = idx
+            if self.layers[idx].layer_type == LayerType.DENSE:
+                if idx == 0:
+                    self.layers[idx].setup(input_shape=input_shape[0], next_layer=self.layers[idx + 1])
                 else:
-                    dense_input_shape = self.layers[layer_idx - 1].output_shape
-                    if type(self.layers[layer_idx - 1].output_shape) == tuple:
+                    dense_input_shape = self.layers[idx - 1].output_shape
+                    if type(self.layers[idx - 1].output_shape) == tuple:
                         dense_input_shape = dense_input_shape[0]
-                    if layer_idx == len(self.layers) - 1:
-                        self.layers[layer_idx].setup(input_shape=dense_input_shape)
+                    if idx == len(self.layers) - 1:
+                        self.layers[idx].setup(input_shape=dense_input_shape)
                     else:
-                        self.layers[layer_idx].setup(input_shape=dense_input_shape,
-                                                     next_layer=self.layers[layer_idx + 1])
-            elif self.layers[layer_idx].layer_type == LayerType.CONV and layer_idx == 0:
-                self.layers[layer_idx].setup(input_shape=input_shape)
+                        self.layers[idx].setup(input_shape=dense_input_shape, next_layer=self.layers[idx + 1])
+            elif self.layers[idx].layer_type == LayerType.CONV and idx == 0:
+                self.layers[idx].setup(input_shape=input_shape)
             else:
-                self.layers[layer_idx].setup(input_shape=self.layers[layer_idx - 1].output_shape)
-
-
-
+                self.layers[idx].setup(input_shape=self.layers[idx - 1].output_shape)
