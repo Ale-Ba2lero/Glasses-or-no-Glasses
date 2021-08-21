@@ -5,12 +5,19 @@ from model.utility import xavier_initialization
 
 class Conv2D(Layer):
 
-    def __init__(self, num_filters: int, kernel_size: int = 3, padding: int = 0, stride: int = 1):
+    def __init__(self, num_filters: int, kernel_size: int = 3, padding="same", stride: int = 1):
         super().__init__()
+
         self.num_filters: int = num_filters
         self.kernel_size: int = kernel_size
-        self.padding: int = padding
-        self.stride: int = stride
+
+        if padding == "same":
+            self.padding: int = (kernel_size - 1) // 2
+            self.stride = 1
+        else:
+            self.padding: int = padding
+            self.stride: int = stride
+
         self.layer_type: LayerType = LayerType.CONV
 
         self.W = None
