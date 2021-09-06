@@ -16,12 +16,6 @@ from model.layers.softmax import Softmax
 from model.layers.dropout import Dropout
 import matplotlib.pyplot as plt
 
-'''
-Batch Gradient Descent. Batch Size = Size of Training Set
-Stochastic Gradient Descent. Batch Size = 1
-Mini-Batch Gradient Descent. 1 < Batch Size < Size of Training Set
-'''
-
 
 def main():
     # ------------------------------------ DATASET
@@ -45,16 +39,6 @@ def main():
         data[x] = img
 
     # print('Min: %.3f, Max: %.3f' % (data.min(), data.max()))
-    """
-    width, height = d.size  
-    left = (width - width/3*2)/2
-    top = (height - height/2)/2
-    right = (width + width/3*2)/2
-    bottom = (height + height/2)/2
-    
-    # Crop the center of the image
-    d.crop((left, top, right, bottom)).show()
-    """
 
     plt.imshow(data[0])
     plt.show()
@@ -72,13 +56,12 @@ def main():
 
     # ------------------------------------ BUILD THE MODEL
     nn = NeuralNetwork([
-        Conv2D(num_filters=24, kernel_size=3, padding=1), LeakyReLU(),
-        MaxPool2D(),
-        Conv2D(num_filters=8, kernel_size=3, padding=1), LeakyReLU(),
-        MaxPool2D(),
+        Conv2D(num_filters=16, kernel_size=5, padding="same"), LeakyReLU(),
+        Conv2D(num_filters=16, kernel_size=3, padding="same"), LeakyReLU(),
+        Conv2D(num_filters=32, kernel_size=3, padding="same"), LeakyReLU(), MaxPool2D(),
         Flatten(),
-        Dense(10), LeakyReLU(),
-        Dropout(0.2),
+        Dense(128), LeakyReLU(), Dropout(0.2),
+        Dense(128), LeakyReLU(), Dropout(0.2),
         Dense(2), Softmax()
     ], CategoricalCrossEntropy())
 

@@ -10,9 +10,6 @@ from model.layers.softmax import Softmax
 from model.neural_network import NeuralNetwork
 
 
-# np.seterr(all='raise')
-
-
 def spiral_data(points, classes):
     X = np.zeros((points * classes, 2))
     y = np.zeros(points * classes, dtype='uint8')
@@ -23,11 +20,7 @@ def spiral_data(points, classes):
         X[ix] = np.c_[r * np.sin(t * 2.5), r * np.cos(t * 2.5)]
         y[ix] = class_number
     return X, y
-'''
-Batch Gradient Descent. Batch Size = Size of Training Set
-Stochastic Gradient Descent. Batch Size = 1
-Mini-Batch Gradient Descent. 1 < Batch Size < Size of Training Set
-'''
+
 
 # ------------------------------------ DATASET
 N = 200  # number of points per class

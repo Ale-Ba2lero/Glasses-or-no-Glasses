@@ -1,6 +1,7 @@
 from model.layers.layer import Layer, LayerType
 import numpy as np
 from model.utility import xavier_initialization
+from model.utility import he_initialization
 
 
 class Conv2D(Layer):
@@ -36,11 +37,11 @@ class Conv2D(Layer):
 
         if len(input_shape) == 2:
             filters_shape = (self.kernel_size, self.kernel_size, self.num_filters)
-            self.W: np.ndarray = xavier_initialization(units=filters_shape)
+            self.W: np.ndarray = he_initialization(units=filters_shape)
 
         elif len(input_shape) == 3:
             filters_shape = (self.kernel_size, self.kernel_size, self.input_shape[2], self.num_filters)
-            self.W: np.ndarray = xavier_initialization(units=filters_shape)
+            self.W: np.ndarray = he_initialization(units=filters_shape)
 
         self.b = np.zeros((1, self.num_filters))
 

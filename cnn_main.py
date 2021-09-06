@@ -11,11 +11,6 @@ from model.neural_network import NeuralNetwork
 
 import idx2numpy
 
-"""
-plt.imshow(data[0])
-plt.show()
-"""
-
 train_images_file = 'dataset/train-images.idx3-ubyte'
 train_labels_file = 'dataset/train-labels.idx1-ubyte'
 

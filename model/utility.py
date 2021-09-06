@@ -9,6 +9,13 @@ def xavier_initialization(units, shape=None):
     return np.random.normal(loc=0, scale=stddev, size=shape)
 
 
+def he_initialization(units, shape=None):
+    if shape is None:
+        shape = units
+    stddev = np.sqrt(2 / np.prod(units))
+    return np.random.normal(loc=0, scale=stddev, size=shape)
+
+
 class Metrics:
     def __init__(self):
         self.history = {}
@@ -42,3 +49,9 @@ class Metrics:
         loss, acc, _ = loss_function.calculate(output, labels)
 
         return loss, acc
+
+    @staticmethod
+    def normalize_meanstd(a, axis=None):
+        mean = np.mean(a, axis=axis, keepdims=True)
+        std = np.sqrt(((a - mean) ** 2).mean(axis=axis, keepdims=True))
+        return (a - mean) / std
