@@ -18,6 +18,10 @@ then used to update the original neural network. The process is
 repeated till the network is trained.
 </div>
 
+<!-- ABOUT THE PROJECT -->
+## About The Project
+This project was developed for the university exams in Statistical Methods for Machine Learning and Algorithms for Massive Datasets.
+
 Read the Paper: [Glasses](https://github.com/Ale-Ba2lero/Glasses-or-no-Glasses/blob/main/Glasses___A_scalable_CNN_implementation_for_image_classification__from_scratch_.pdf)
 
 
@@ -25,7 +29,6 @@ Read the Paper: [Glasses](https://github.com/Ale-Ba2lero/Glasses-or-no-Glasses/b
 ## Contact
 
 Alessandro Ballerini - alessandroballerini95@gmail.com
-
 
 
 <!-- GETTING STARTED -->
